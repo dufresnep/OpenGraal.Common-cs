@@ -106,7 +106,7 @@ namespace OpenGraal.Common.Players
 			return null;
 		}
 
-		public int count()
+		public int Count()
 		{
 			return PlayerList.Count;
 		}
