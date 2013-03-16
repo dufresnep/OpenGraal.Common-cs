@@ -11,6 +11,7 @@ namespace OpenGraal.Common.Levels
 {
 	public class GraalLevel
 	{
+		#region Member Variables
 		/// <summary>
 		/// Member Variables
 		/// </summary>
@@ -21,7 +22,11 @@ namespace OpenGraal.Common.Levels
 		public uint ModTime;
 		public string Name;
 		public object TimerLock = new object();
+		public CString base64 = new CString() + "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+		private GraalLevelTile[] tiles = new GraalLevelTile[4096];
+		#endregion
 
+		#region	Constructor /  Destructor
 		/// <summary>
 		/// Constructor
 		/// </summary>
@@ -32,6 +37,13 @@ namespace OpenGraal.Common.Levels
 			this.FlagManager = new FlagManager(null);
 		}
 
+		~GraalLevel()
+		{
+			this.Clear();
+		}
+		#endregion
+
+		#region Public functions
 		/// <summary>
 		/// Clear Level (test)
 		/// </summary>
@@ -120,47 +132,6 @@ namespace OpenGraal.Common.Levels
 		}
 
 		/// <summary>
-		/// Grab Local NPCS
-		/// </summary>
-		public List<dynamic> npcs
-		{
-			get
-			{
-				List<dynamic> obj = new List<dynamic>();
-				foreach (KeyValuePair<int, GraalLevelNPC> l in NpcList)
-				{
-					if (l.Value.ScriptObject != null)
-						obj.Add((dynamic)l.Value.ScriptObject);
-				}
-				return obj;
-			}
-		}
-
-		/// <summary>
-		/// Grab Local Players
-		/// </summary>
-		public List<GraalPlayer> players
-		{
-			get { return this.Players; }
-		}
-
-		/// <summary>
-		/// Script Variable -> flags
-		/// </summary>
-		public FlagManager flags
-		{
-			get { return FlagManager; }
-		}
-
-		/// <summary>
-		/// Script Variable -> name
-		/// </summary>
-		public string name
-		{
-			get { return this.Name; }
-		}
-
-		/// <summary>
 		/// Player is on npc
 		/// </summary>
 		public GraalLevelNPC isOnNPC(int x, int y)
@@ -232,5 +203,118 @@ namespace OpenGraal.Common.Levels
 			if (npc != null)
 				npc.Call(Event, Params);
 		}
+
+		public bool Load(CString pFileName)
+		{
+			CStringList levelData = new CStringList();
+			if (!levelData.Load(pFileName.Text))
+				return false;
+
+			if (levelData.Count < 1)
+				return false;
+
+			for (int i = 1; i < levelData.Count; i++)
+			{
+				CStringList words = new CStringList();
+				words.Load(levelData.Get(i).Text, ' ');
+				if (words.Count <= 0)
+					continue;
+
+				if (words.Get(i).Text == "BOARD")
+				{
+					if (words.Count <= 5)
+						continue;
+
+					int x, y, w;
+					int.TryParse(words.Get(1).Text, out x);
+					int.TryParse(words.Get(2).Text, out y);
+					int.TryParse(words.Get(3).Text, out w);
+					CString data = words.Get(5);
+
+					if (x >= 0 && x <= 64 && y >= 0 && y <= 64 && w > 0 && x + w <= 64)
+					{
+						if (data.Length >= w * 2)
+						{
+							for (int ii = x; ii < x + w; ii++)
+							{
+								byte left = data.ReadGUByte1();
+								byte top = data.ReadGUByte1();
+								int tile = base64.IndexOf((char)left) << 6;
+								tile += base64.IndexOf((char)top);
+								tiles[ii + y*64].SetTile(tile);
+							}
+						}
+					}
+				}
+			}
+
+			return true;
+		}
+
+		public void Render()
+		{
+			/*
+			glBindTexture(GL_TEXTURE_2D, tileset->getTexture());
+			glAlphaFunc(GL_GREATER, 0);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			glEnable(GL_BLEND);
+			glEnable(GL_ALPHA_TEST);
+			*/
+			/* Render Tiles */
+			for (int i = 0; i < 4096; i++)
+			{
+				tiles[i].Render((i % 64) * 16, (i / 64) * 16);
+			}
+
+			/*
+			glDisable(GL_ALPHA_TEST);
+			glDisable(GL_BLEND);
+			*/
+		}
+		#endregion
+
+		#region	Get-Value Functions
+		/// <summary>
+		/// Grab Local NPCS
+		/// </summary>
+		public List<dynamic> npcs
+		{
+			get
+			{
+				List<dynamic> obj = new List<dynamic>();
+				foreach (KeyValuePair<int, GraalLevelNPC> l in NpcList)
+				{
+					if (l.Value.ScriptObject != null)
+						obj.Add((dynamic)l.Value.ScriptObject);
+				}
+				return obj;
+			}
+		}
+
+		/// <summary>
+		/// Grab Local Players
+		/// </summary>
+		public List<GraalPlayer> players
+		{
+			get { return this.Players; }
+		}
+
+		/// <summary>
+		/// Script Variable -> flags
+		/// </summary>
+		public FlagManager flags
+		{
+			get { return FlagManager; }
+		}
+
+		/// <summary>
+		/// Script Variable -> name
+		/// </summary>
+		public string name
+		{
+			get { return this.Name; }
+		}
+		#endregion
 	}
 }

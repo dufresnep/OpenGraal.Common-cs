@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using OpenGraal;
 using OpenGraal.Core;
 using OpenGraal.Common;
@@ -10,13 +11,17 @@ namespace OpenGraal.Common.Levels
 {
 	public class GraalMap
 	{
+		#region Member Variables
 		/// <summary>
 		/// Member Variables
 		/// </summary>
 		public int MapWidth, MapHeight;
+		public bool AutoMapping, LoadFullMap;
 		public string MapName, MapImage, MiniMapImage;
-		private string[] MapLevels = new string[] { };
+		private GraalLevel[] MapLevels = new GraalLevel[] { };
+		#endregion
 
+		#region Constructors / Destructors
 		/// <summary>
 		/// Constructor
 		/// </summary>
@@ -33,14 +38,16 @@ namespace OpenGraal.Common.Levels
 			this.MapName = MapName;
 			this.ParseFile(FilePath);
 		}
+		#endregion
 
+		#region Public functions
 		/// <summary>
 		/// Get Level from Map X / Map Y
 		/// </summary>
 		public string GetLevelAt(int MapX, int MapY)
 		{
 			int pos = MapX + MapY * MapWidth;
-			return (pos < MapLevels.Length ? MapLevels[pos] : String.Empty);
+			return (pos < MapLevels.Length ? MapLevels[pos].Name : "");
 		}
 
 		/// <summary>
@@ -48,7 +55,14 @@ namespace OpenGraal.Common.Levels
 		/// </summary>
 		public bool LevelExists(String LevelName)
 		{
-			return MapLevels.Contains(LevelName);
+			bool exist = false;
+			foreach (GraalLevel level in this.MapLevels)
+			{
+				if (level.Name == LevelName)
+					exist = true;
+			}
+			
+			return exist;
 		}
 
 		/// <summary>
@@ -60,6 +74,39 @@ namespace OpenGraal.Common.Levels
 			{
 				this.Parse((StreamReader)reader);
 			}
+		}
+
+		public int Generate(string TemplateFileName = "")
+		{
+			int GmapLevelArea = (this.MapWidth * this.MapHeight);
+
+			// Create MapLevels Array
+			this.MapLevels = new GraalLevel[GmapLevelArea];
+
+			int gx = 0, gy = 0;
+			String GeneratedLevelName;
+
+			for (int i = 0; i < GmapLevelArea; i++)
+			{
+				GeneratedLevelName = (this.MapName + "_" + gx + "_" + gy + ".nw");
+
+				for (gx = 0; gx < this.MapWidth; gx++)
+				{
+					int pos = gx + gy * MapWidth;
+					if (pos < MapLevels.Length)
+					{
+						this.MapLevels[pos] = new GraalLevel(GeneratedLevelName, new object());
+						if (TemplateFileName.Length != 0)
+							if (!this.MapLevels[pos].Load(new CString() + TemplateFileName))
+								return 2;
+					}
+				}
+
+				gy++;
+			}
+
+			System.Console.WriteLine("File: " + MapName + " | Level Count: " + MapLevels.Length);
+			return 1;
 		}
 
 		/// <summary>
@@ -125,7 +172,7 @@ namespace OpenGraal.Common.Levels
 					case "LEVELNAMES":
 					{
 						// Create MapLevels Array
-						this.MapLevels = new string[this.MapWidth * this.MapHeight];
+						this.MapLevels = new GraalLevel[this.MapWidth * this.MapHeight];
 
 						int gx = 0, gy = 0;
 						while ((line = Stream.ReadLine()) != null)
@@ -140,7 +187,11 @@ namespace OpenGraal.Common.Levels
 								{
 									int pos = gx + gy * MapWidth;
 									if (pos < MapLevels.Length)
-										this.MapLevels[pos] = level;
+									{
+										this.MapLevels[pos] = new GraalLevel(level, new object());
+										this.MapLevels[pos].Load(new CString() + level);
+									}
+
 									gx++;
 								}
 							}
@@ -156,5 +207,68 @@ namespace OpenGraal.Common.Levels
 
 			System.Console.WriteLine("File: " + MapName + " | Level Count: " + MapLevels.Length);
 		}
+
+		public int Save(string GmapDirectory)
+		{
+			//Create the new directory
+			if (System.IO.Directory.Exists(GmapDirectory))
+				return 0;
+
+			System.IO.Directory.CreateDirectory(GmapDirectory);
+
+
+			StringBuilder GmapFile = new StringBuilder();
+
+			GmapFile.AppendLine("GRMAP001");
+			GmapFile.AppendLine("WIDTH " + this.MapWidth);
+			GmapFile.AppendLine("HEIGHT " + this.MapHeight);
+
+			if (this.AutoMapping == true)
+			{
+				GmapFile.AppendLine("NOAUTOMAPPING");
+			}
+
+			if (this.LoadFullMap == true)
+			{
+				GmapFile.AppendLine("LOADFULLMAP");
+			}
+
+			GmapFile.AppendLine("LEVELNAMES");
+
+
+			GmapFile.AppendLine("LEVELNAMESEND");
+
+			File.WriteAllText(GmapDirectory + this.MapName, GmapFile.ToString());
+
+			String[] Lines = File.ReadAllLines(GmapDirectory + this.MapName + ".gmap");
+			Boolean IsMapLine = false;
+			GmapFile.Clear();
+
+			foreach (String line in Lines)
+			{
+				if (line.StartsWith("LEVELNAMES"))
+				{
+					IsMapLine = true;
+				}
+				if (line.StartsWith("LEVELNAMESEND"))
+				{
+					IsMapLine = false;
+				}
+				if (IsMapLine == true && line.StartsWith("LEVELNAMES") != true)
+				{
+					GmapFile.AppendLine(line.Substring(0, line.Length - 1));
+				}
+				else
+				{
+					GmapFile.AppendLine(line);
+				}
+			}
+
+			File.Delete(GmapDirectory + this.MapName + ".gmap");
+			File.WriteAllText(GmapDirectory + this.MapName + ".gmap", GmapFile.ToString());
+
+			return 1;
+		}
+		#endregion
 	}
 }
