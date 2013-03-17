@@ -212,15 +212,15 @@ namespace OpenGraal.Common.Levels
 
 			if (levelData.Count < 1)
 				return false;
-
-			for (int i = 1; i < levelData.Count; i++)
+		
+			foreach (CString lvlDat in levelData)
 			{
 				CStringList words = new CStringList();
-				words.Load(levelData.Get(i).Text, ' ');
+				words.Load(lvlDat.Text, ' ');
 				if (words.Count <= 0)
 					continue;
 
-				if (words.Get(i).Text == "BOARD")
+				if (words.Get(0).Text == "BOARD")
 				{
 					if (words.Count <= 5)
 						continue;
@@ -237,10 +237,13 @@ namespace OpenGraal.Common.Levels
 						{
 							for (int ii = x; ii < x + w; ii++)
 							{
-								byte left = data.ReadGUByte1();
-								byte top = data.ReadGUByte1();
-								int tile = base64.IndexOf((char)left) << 6;
-								tile += base64.IndexOf((char)top);
+								char left = (char)data.ReadGByte1();
+								char top = (char)data.ReadGByte1();
+								int tile = base64.IndexOf(left) << 6;
+								tile += base64.IndexOf(top);
+								Console.WriteLine("Tile:" + left.ToString() + " " + top.ToString() + " " + tile);
+								Console.WriteLine("Tile:  (" + ii + " + " + y + " * 64) = " + (ii + y * 64).ToString());
+								tiles[ii + y * 64] = new GraalLevelTile();
 								tiles[ii + y*64].SetTile(tile);
 							}
 						}

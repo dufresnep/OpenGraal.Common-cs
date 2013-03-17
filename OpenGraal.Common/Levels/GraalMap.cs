@@ -235,10 +235,24 @@ namespace OpenGraal.Common.Levels
 
 			GmapFile.AppendLine("LEVELNAMES");
 
+			int widCount = 0;
+
+			foreach (GraalLevel tmpLvl in this.MapLevels)
+			{
+				widCount++;
+				tmpLvl.Save(GmapDirectory);
+				GmapFile.Append("\"" + tmpLvl.Name + "\", ");
+				if (widCount == 3)
+				{
+					GmapFile.Remove(GmapFile.Length - 2, 2);
+					GmapFile.AppendLine();
+					widCount = 0;
+				}
+			}
 
 			GmapFile.AppendLine("LEVELNAMESEND");
 
-			File.WriteAllText(GmapDirectory + this.MapName, GmapFile.ToString());
+			File.WriteAllText(GmapDirectory + this.MapName + ".gmap", GmapFile.ToString());
 
 			String[] Lines = File.ReadAllLines(GmapDirectory + this.MapName + ".gmap");
 			Boolean IsMapLine = false;
