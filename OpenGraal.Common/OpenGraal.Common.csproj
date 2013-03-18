@@ -47,7 +47,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Levels\GraalLevelLink.cs" />
     <Compile Include="Levels\GraalLevel.cs" />
+    <Compile Include="Levels\GraalLevelSign.cs" />
+    <Compile Include="Levels\GraalLevelTileList.cs" />
     <Compile Include="Scripting\ExtensionMethods.cs" />
     <Compile Include="Scripting\IRefObject.cs" />
     <Compile Include="Levels\GraalLevelTile.cs" />
