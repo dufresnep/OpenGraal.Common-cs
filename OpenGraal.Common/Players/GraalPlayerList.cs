@@ -80,9 +80,9 @@ namespace OpenGraal.Common.Players
 			GraalPlayer rc = null;
 			foreach (KeyValuePair<Int16, GraalPlayer> Player in PlayerList)
 			{
-				if (Player.Value.account == Account)
+				if (Player.Value.Account == Account)
 				{
-					if (Player.Value.level != null)
+					if (Player.Value.Level != null)
 						return Player.Value;
 					else
 						rc = Player.Value;
@@ -99,7 +99,7 @@ namespace OpenGraal.Common.Players
 		{
 			foreach (KeyValuePair<Int16, GraalPlayer> Player in PlayerList)
 			{
-				if (Player.Value.account == pAccount && Player.Value.id == pId)
+				if (Player.Value.Account == pAccount && Player.Value.Id == pId)
 					return Player.Value;
 			}
 

@@ -137,17 +137,18 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Set Variables
 		/// </summary>
-		protected ColorManager ColorManager = null;
-		protected FlagManager _flagManager = null;
-		protected GraalLevel _level = null;
-		protected GraalMap PlayerMap = null;
-		protected List<ServerWeapon> WeaponList = new List<ServerWeapon>();
+		private ColorManager _colorManager = null;
+		private FlagManager _flagManager = null;
+		private GraalLevel _level = null;
+		private GraalMap _playerMap = null;
+		private List<ServerWeapon> _weaponList = new List<ServerWeapon>();
 		private ClientType _type = 0;
-		protected double _hearts = 3;
-		protected int _ap = 50, _arrows = 10, _bombs = 5, BombPower = 1, _deaths = 0, _dir = 2, _fullHearts = 3, _glovePower = 1, _gralats = 0, _kills = 0, _magic = 0, _onlineTime = 0, PlayerStatus = 0, _shieldPower = 1, _swordPower = 1, GmapX = 0, GmapY = 0, PixelX = 0, PixelY = 0;
-		protected short Id = 0;
-		protected string _account, _ani, _bodyImage, _chat, _headImage, _guild, IPAddress, Level = String.Empty, _nickname, _shieldImage, _swordImage;
-		protected static int[] touchtestd = new int[] {24,8, 0,32, 24,56, 48,32};
+		private bool _isLocalPlayer = true;
+		private double _hearts = 3;
+		private int _ap = 50, _arrows = 10, _bombs = 5, _bombPower = 1, _deaths = 0, _dir = 2, _fullHearts = 3, _glovePower = 1, _gralats = 0, _kills = 0, _magic = 0, _onlineTime = 0, _playerStatus = 0, _shieldPower = 1, _swordPower = 1, _gmapX = 0, _gmapY = 0, _pixelX = 0, _pixelY = 0;
+		private short _id = 0;
+		private string _account, _ani, _bodyImage, _chat, _headImage, _guild, _ipAddress, _nickname, _shieldImage, _swordImage;
+		private static int[] touchtestd = new int[] { 24, 8, 0, 32, 24, 56, 48, 32 };
 		#endregion
 
 		#region Class Constructors
@@ -157,7 +158,7 @@ namespace OpenGraal.Common.Players
 		public GraalPlayer(Int16 Id)
 		{
 			this.Id = Id;
-			this.ColorManager = new ColorManager(new ColorManager.dSendColors(SendColors));
+			this._colorManager = new ColorManager(new ColorManager.dSendColors(SendColors));
 			this._flagManager = new FlagManager(new FlagManager.dSendFlag(SendFlag));
 		}
 		#endregion
@@ -255,7 +256,7 @@ namespace OpenGraal.Common.Players
 					return new CString() + (byte)this._glovePower;
 
 				case Properties.BOMBPOWER: // 7
-					return new CString() + (byte)this.BombPower;
+					return new CString() + (byte)this._bombPower;
 
 				case Properties.SWORDPOWER: // 8
 					return new CString() + (byte)(this._swordPower + 30) + (byte)this._swordImage.Length + this._swordImage;
@@ -273,19 +274,19 @@ namespace OpenGraal.Common.Players
 					return new CString() + (byte)this._chat.Length + this._chat;
 
 				case Properties.PLCOLORS: // 13
-					return ColorManager.GetPacket();
+					return _colorManager.GetPacket();
 
 				case Properties.PLAYERX: // 15
-					return new CString() + (byte)(this.PixelX / 8);
+					return new CString() + (byte)(this._pixelX / 8);
 
 				case Properties.PLAYERY: // 16
-					return new CString() + (byte)(this.PixelY / 8);
+					return new CString() + (byte)(this._pixelY / 8);
 
 				case Properties.PLSPRITE: // 17
 					return new CString() + (byte)(this._dir % 4);
 
 				case Properties.PLSTATUS: // 8
-					return new CString() + (byte)this.PlayerStatus;
+					return new CString() + (byte)this._playerStatus;
 
 				case Properties.KILLSCOUNT: // 27
 					return new CString() + (int)this._kills;
@@ -304,16 +305,16 @@ namespace OpenGraal.Common.Players
 
 				case Properties.PIXELX: // 75
 				{
-					int res = (PixelX < 0 ? -PixelX : PixelX) << 1;
-					if (PixelX < 0)
+					int res = (_pixelX < 0 ? -_pixelX : _pixelX) << 1;
+					if (_pixelX < 0)
 						res |= 0x0001;
 					return new CString() + (short)res;
 				}
 
 				case Properties.PIXELY: // 76
 				{
-					int res = (PixelY < 0 ? -PixelY : PixelY) << 1;
-					if (PixelY < 0)
+					int res = (_pixelY < 0 ? -_pixelY : _pixelY) << 1;
+					if (_pixelY < 0)
 						res |= 0x0001;
 					return new CString() + (short)res;
 				}
@@ -364,7 +365,7 @@ namespace OpenGraal.Common.Players
 						break;
 
 					case Properties.BOMBPOWER: // 7
-						this.BombPower = Packet.ReadGUByte1();
+						this._bombPower = Packet.ReadGUByte1();
 						break;
 
 					case Properties.SWORDPOWER: // 8
@@ -419,7 +420,7 @@ namespace OpenGraal.Common.Players
 
 					case Properties.PLCOLORS: // 13
 						for (int i = 0; i < 5; i++)
-							this.ColorManager[i] = Packet.ReadGUByte1();
+							this._colorManager[i] = Packet.ReadGUByte1();
 						break;
 
 					case Properties.PLAYERID: // 14
@@ -439,8 +440,8 @@ namespace OpenGraal.Common.Players
 						break;
 
 					case Properties.PLSTATUS: // 18
-						this.PlayerStatus = Packet.ReadGUByte1();
-						if ((this.PlayerStatus & (int)Status.DEAD) != 0)
+						this._playerStatus = Packet.ReadGUByte1();
+						if ((this._playerStatus & (int)Status.DEAD) != 0)
 						{
 							if (_level != null)
 								_level.CallNPCs("onPlayerDies", new object[] { this });
@@ -453,7 +454,7 @@ namespace OpenGraal.Common.Players
 
 					case Properties.CURLEVEL: // 20
 						// Set new level
-						this.Level = Packet.ReadChars(Packet.ReadGUByte1()).Trim();
+						this.Level = new GraalLevel(Packet.ReadChars(Packet.ReadGUByte1()).Trim(), new object());
 
 						// Remove from old level
 						if (this._level != null)
@@ -509,7 +510,7 @@ namespace OpenGraal.Common.Players
 						break;
 
 					case Properties.IPADDRESS: // 30
-						this.IPAddress = new System.Net.IPAddress(Packet.ReadGUByte5()).ToString();
+						this._ipAddress = new System.Net.IPAddress(Packet.ReadGUByte5()).ToString();
 						break;
 
 					case Properties.UDPPORT: // 31
@@ -549,12 +550,12 @@ namespace OpenGraal.Common.Players
 						break;
 
 					case Properties.GMAPLEVELX: // 43
-						GmapX = Packet.ReadGUByte1();
+						_gmapX = Packet.ReadGUByte1();
 						this.AdjustLevels();
 						break;
 
 					case Properties.GMAPLEVELY: // 44
-						GmapY = Packet.ReadGUByte1();
+						_gmapY = Packet.ReadGUByte1();
 						this.AdjustLevels();
 						break;
 
@@ -622,24 +623,24 @@ namespace OpenGraal.Common.Players
 
 					case Properties.PIXELX: // 78
 					{
-						int tmp = this.PixelX = Packet.ReadGUByte2();
+						int tmp = this._pixelX = Packet.ReadGUByte2();
 
 						// If the first bit is 1, our position is negative.
-						this.PixelX >>= 1;
+						this._pixelX >>= 1;
 						if ((tmp & 0x0001) != 0)
-							this.PixelX = -this.PixelX;
+							this._pixelX = -this._pixelX;
 						moved = true;
 						break;
 					}
 
 					case Properties.PIXELY: // 79
 					{
-						int tmp = this.PixelY = Packet.ReadGUByte2();
+						int tmp = this._pixelY = Packet.ReadGUByte2();
 
 						// If the first bit is 1, our position is negative.
-						this.PixelY >>= 1;
+						this._pixelY >>= 1;
 						if ((tmp & 0x0001) != 0)
-							this.PixelY = -this.PixelY;
+							this._pixelY = -this._pixelY;
 						moved = true;
 						break;
 					}
@@ -663,7 +664,7 @@ namespace OpenGraal.Common.Players
 
 			if (moved && _level != null)
 			{
-				GraalLevelNPC npc = _level.isOnNPC(PixelX + touchtestd[dir*2], PixelY + touchtestd[dir*2+1]);
+				GraalLevelNPC npc = _level.isOnNPC(_pixelX + touchtestd[Dir*2], _pixelY + touchtestd[Dir*2+1]);
 				if (npc != null)
 					npc.Call("onPlayerTouchsMe", new object[] { this });
 			}
@@ -702,7 +703,7 @@ namespace OpenGraal.Common.Players
 				return;
 
 			//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLADDWEP + (short)Id + Weapon.Name);
-			WeaponList.Add(Weapon);
+			_weaponList.Add(Weapon);
 		}
 
 		/// <summary>
@@ -733,7 +734,7 @@ namespace OpenGraal.Common.Players
 			{
 				//if (SendToServer)
 				//	Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLDELWEP + (short)Id + WeaponName);
-				WeaponList.Remove(weapon);
+				_weaponList.Remove(weapon);
 			}
 		}
 
@@ -742,7 +743,7 @@ namespace OpenGraal.Common.Players
 		/// </summary>
 		public ServerWeapon FindWeapon(String WeaponName)
 		{
-			foreach (ServerWeapon weapon in WeaponList)
+			foreach (ServerWeapon weapon in _weaponList)
 			{
 				if (weapon.Name == WeaponName)
 					return weapon;
@@ -755,9 +756,9 @@ namespace OpenGraal.Common.Players
 		/// </summary>
 		public void DisableWeapons()
 		{
-			if ((this.PlayerStatus & (int)Status.ALLOWWEAPONS) != 0)
+			if ((this._playerStatus & (int)Status.ALLOWWEAPONS) != 0)
 			{
-				this.PlayerStatus &= (int)~Status.ALLOWWEAPONS;
+				this._playerStatus &= (int)~Status.ALLOWWEAPONS;
 				//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLSETSTATUS + (short)id + (byte)1 + (byte)Status.ALLOWWEAPONS);
 			}
 		}
@@ -767,9 +768,9 @@ namespace OpenGraal.Common.Players
 		/// </summary>
 		public void EnableWeapons()
 		{
-			if ((this.PlayerStatus & (int)Status.ALLOWWEAPONS) == 0)
+			if ((this._playerStatus & (int)Status.ALLOWWEAPONS) == 0)
 			{
-				this.PlayerStatus |= (int)Status.ALLOWWEAPONS;
+				this._playerStatus |= (int)Status.ALLOWWEAPONS;
 				//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLSETSTATUS + (short)id + (byte)0 + (byte)Status.ALLOWWEAPONS);
 			}
 		}
@@ -781,7 +782,7 @@ namespace OpenGraal.Common.Players
 		/// </summary>
 		public void SetAni(String Ani, params string[] Params)
 		{
-			this.ani = Ani;
+			this.Ani = Ani;
 			// set ganiattr params
 		}
 
@@ -816,221 +817,282 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Functions -> Retrieve variables for scripting / update props
 		/// </summary>
-		public string account
+		public virtual string Account
 		{
 			get { return _account; }
 			set { _account = value; }
 		}
 
-		public string ani
+		public virtual string Ani
 		{
 			get { return _ani; }
 			set { _ani = value; this.SendProp(Properties.ANIMATION); }
 		}
 
-		public int ap
+		public virtual int Ap
 		{
 			get { return _ap; }
 			set { _ap = value; this.SendProp(Properties.ALIGNMENT); }
 		}
 
-		public ClientType type
+		public virtual ClientType Type
 		{
 			get { return _type; }
 			set { _type = value;  }
 		}
 
-		public int arrows
+		public virtual int Arrows
 		{
 			get { return _arrows; }
 			set { if (_arrows != value) { _arrows = value; this.SendProp(Properties.ARROWSCOUNT); } }
 		}
 
-		public string body
+		public virtual int GmapX
+		{
+			get { return this._gmapX; }
+			set { if (this._gmapX != value) { this._gmapX = value; this.SendProp(Properties.GMAPLEVELX); } }
+		}
+
+		public virtual int GmapY
+		{
+			get { return this._gmapY; }
+			set { if (this._gmapY != value) { this._gmapY = value; this.SendProp(Properties.GMAPLEVELY); } }
+		}
+
+		public virtual string BodyImage
 		{
 			get { return _bodyImage; }
 			set { _bodyImage = value; this.SendProp(Properties.BODYIMAGE); }
 		}
 
-		public string bodyimg
-		{
-			get { return _bodyImage; }
-			set { _bodyImage = value; this.SendProp(Properties.BODYIMAGE); }
-		}
-
-		public int bombs
+		public virtual int Bombs
 		{
 			get { return _bombs; }
 			set { if (_bombs != value) { _bombs = value; this.SendProp(Properties.BOMBSCOUNT); } }
 		}
 
-		public string chat
+		public virtual int BombPower
+		{
+			get { return _bombPower; }
+			set { if (_bombPower != value) { _bombPower = value; this.SendProp(Properties.BOMBPOWER); } }
+		}
+
+		public virtual string Chat
 		{
 			get { return _chat; }
 			set { _chat = value; this.SendProp(Properties.CURCHAT); }
 		}
 
-		public ColorManager colors
+		public virtual ColorManager Colors
 		{
-			get { return ColorManager; }
+			get { return _colorManager; }
 		}
 
-		public int darts
+		public virtual ColorManager ColorManager
 		{
-			get { return _arrows; }
-			set { if (_arrows != value) { _arrows = value; this.SendProp(Properties.ARROWSCOUNT); } }
+			get { return _colorManager; }
+			set { this._colorManager = value; }
 		}
 
-		public int deaths
+		public virtual int Darts
 		{
-			get { return _deaths; }
-			set { _deaths = value; this.SendProp(Properties.DEATHSCOUNT); }
+			get { return this._arrows; }
+			set { if (this._arrows != value) { this._arrows = value; this.SendProp(Properties.ARROWSCOUNT); } }
 		}
 
-		public int dir
+		public virtual int Deaths
 		{
-			get { return _dir; }
-			set { _dir = value; this.SendProp(Properties.PLSPRITE); }
+			get { return this._deaths; }
+			set { this._deaths = value; this.SendProp(Properties.DEATHSCOUNT); }
 		}
 
-		public FlagManager flags
+		public virtual int Dir
 		{
-			get { return _flagManager; }
+			get { return this._dir; }
+			set { this._dir = value; this.SendProp(Properties.PLSPRITE); }
 		}
 
-		public int fullhearts
+		public virtual int Magic
 		{
-			get { return _fullHearts; }
-			set { _fullHearts = value; this.SendProp(Properties.MAXPOWER); }
+			get { return this._magic; }
+			set { this._magic = value; }
 		}
 
-		public int glovepower
+		public virtual int PixelX
 		{
-			get { return _glovePower; }
-			set { _glovePower = value; this.SendProp(Properties.GLOVEPOWER); }
+			get { return this._pixelX; }
+			set { this._pixelX = value; }
 		}
 
-		public string guild
+		public virtual int PixelY
 		{
-			get { return _guild; }
+			get { return this._pixelY; }
+			set { this._pixelY = value; }
+		}
+
+		public virtual FlagManager Flags
+		{
+			get { return this._flagManager; }
+		}
+
+		public virtual FlagManager FlagManager
+		{
+			get { return this._flagManager; }
+			set { this._flagManager = value; }
+		}
+
+		public virtual string IPAddress
+		{
+			get { return this._ipAddress; }
+			set { this._ipAddress = value; }
+		}
+		public virtual int FullHearts
+		{
+			get { return this._fullHearts; }
+			set { this._fullHearts = value; this.SendProp(Properties.MAXPOWER); }
+		}
+
+		public virtual int GlovePower
+		{
+			get { return this._glovePower; }
+			set { this._glovePower = value; this.SendProp(Properties.GLOVEPOWER); }
+		}
+
+		public virtual string Guild
+		{
+			get { return this._guild; }
 			set { SetGuild(value); this.SendProp(Properties.NICKNAME); }
 		}
 
-		public int gralats
+		public virtual int Gralats
 		{
-			get { return _gralats; }
-			set { _gralats = value; this.SendProp(Properties.RUPEESCOUNT); }
+			get { return this._gralats; }
+			set { this._gralats = value; this.SendProp(Properties.RUPEESCOUNT); }
 		}
 
-		public string head
+		public virtual string Head
 		{
-			get { return _headImage; }
-			set { _headImage = value; this.SendProp(Properties.HEADIMAGE); }
+			get { return this._headImage; }
+			set { this._headImage = value; this.SendProp(Properties.HEADIMAGE); }
 		}
 
-		public string headimg
+		public virtual string HeadImage
 		{
-			get { return _headImage; }
-			set { _headImage = value; this.SendProp(Properties.HEADIMAGE); }
+			get { return this._headImage; }
+			set { this._headImage = value; this.SendProp(Properties.HEADIMAGE); }
 		}
 
-		public double hearts
+		public virtual double Hearts
 		{
 			get { return _hearts; }
-			set { _hearts = value; this.SendProp(Properties.CURPOWER); }
+			set { this._hearts = value; this.SendProp(Properties.CURPOWER); }
 		}
 
-		public int id
+		public virtual short Id
 		{
-			get { return Id; }
+			get { return this._id; }
+			set { this._id = value; }
 		}
 
-		public int kills
+		public virtual int Kills
 		{
-			get { return _kills; }
-			set { _kills = value; this.SendProp(Properties.KILLSCOUNT); }
+			get { return this._kills; }
+			set { this._kills = value; this.SendProp(Properties.KILLSCOUNT); }
 		}
 
-		public GraalLevel level // should return levelobject
+		public virtual GraalLevel Level // should return levelobject
 		{
 			get { return _level; }
 			set { _level = value; }
 		}
 
-		public int mp
+		public virtual int Mp
 		{
 			get { return _magic; }
 			set { _magic = value; this.SendProp(Properties.MAGICPOINTS); }
 		}
 
-		public string nickname
+		public virtual string Nickname
 		{
 			get { return _nickname; }
 			set { SetNick(value); this.SendProp(Properties.NICKNAME); }
 		}
 
-		public int onlinetime
-		{
-			get { return _onlineTime; }
-		}
-
-		public int rupees
+		public virtual int Rupees
 		{
 			get { return _gralats; }
 			set { _gralats = value; this.SendProp(Properties.RUPEESCOUNT); }
 		}
 
-		public string shield
+		public virtual string Shield
 		{
 			get { return _shieldImage; }
 			set { _shieldImage = value; this.SendProp(Properties.SHIELDPOWER); }
 		}
 
-		public string shieldimg
+		public virtual string ShieldImage
 		{
 			get { return _shieldImage; }
 			set { _shieldImage = value; this.SendProp(Properties.SHIELDPOWER); }
 		}
 
-		public int shieldpower
+		public virtual int ShieldPower
 		{
 			get { return _shieldPower; }
 			set { _shieldPower = value; this.SendProp(Properties.SHIELDPOWER); }
 		}
 
-		public string sword
+		public virtual string Sword
 		{
 			get { return _swordImage; }
 			set { _swordImage = value; this.SendProp(Properties.SWORDPOWER); }
 		}
 
-		public string swordimg
+		public virtual string SwordImage
 		{
 			get { return _swordImage; }
 			set { _swordImage = value; this.SendProp(Properties.SWORDPOWER); }
 		}
 
-		public int swordpower
+		public virtual int SwordPower
 		{
 			get { return _swordPower; }
 			set { _swordPower = value; this.SendProp(Properties.SWORDPOWER); }
 		}
 
-		public bool weaponsenabled
+		public virtual bool WeaponsEnabled
 		{
-			get { return (this.PlayerStatus & (int)Status.ALLOWWEAPONS) != 0; }
+			get { return (this._playerStatus & (int)Status.ALLOWWEAPONS) != 0; }
 		}
 
-		public double x
+		public virtual double X
 		{
-			get { return PixelX / 16; }
-			set { PixelX = Convert.ToInt32(value * 16.0); this.SendProp(Properties.PIXELX); }
+			get { return _pixelX / 16; }
+			set { _pixelX = Convert.ToInt32(value * 16.0); this.SendProp(Properties.PIXELX); }
 		}
 
-		public double y
+		public virtual double Y
 		{
-			get { return PixelY / 16; }
-			set { PixelY = Convert.ToInt32(value * 16.0); this.SendProp(Properties.PIXELY); }
+			get { return _pixelY / 16; }
+			set { _pixelY = Convert.ToInt32(value * 16.0); this.SendProp(Properties.PIXELY); }
+		}
+
+		public virtual bool isLocalPlayer
+		{
+			get { return this._isLocalPlayer; }
+			set { this._isLocalPlayer = value; }
+		}
+
+		public virtual int PlayerStatus
+		{
+			get { return this._playerStatus; }
+			set { this._playerStatus = value; }
+		}
+
+		public virtual int OnlineTime
+		{
+			get { return this._onlineTime; }
+			set { this._onlineTime = value; }
 		}
 		#endregion
 	}
