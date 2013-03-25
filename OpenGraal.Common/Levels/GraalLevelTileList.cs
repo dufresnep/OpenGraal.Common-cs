@@ -10,19 +10,24 @@ namespace OpenGraal.Common.Levels
 {
 	public class GraalLevelTileList : IEnumerable
 	{
+		#region Member Variables
 		/// <summary>
 		/// Tile-List
 		/// </summary>
 		protected Dictionary<int, GraalLevelTile> TileList = new Dictionary<int, GraalLevelTile>();
 		protected Int32 Position = -1;
+		#endregion
 
+		#region Constructor
 		/// <summary>
 		/// Constructor
 		/// </summary>
 		public GraalLevelTileList()
 		{
 		}
+		#endregion
 
+		#region Public functions
 		/// <summary>
 		/// Iterate Tilelist Manager
 		/// </summary>
@@ -68,7 +73,6 @@ namespace OpenGraal.Common.Levels
 			return TileList.Remove(pId);
 		}
 
-
 		/// <summary>
 		/// Find Tile by Id/Account
 		/// </summary>
@@ -76,8 +80,12 @@ namespace OpenGraal.Common.Levels
 		{
 			int width = this.get_width();
 			foreach (KeyValuePair<int, GraalLevelTile> t in TileList)
+			{
 				if (t.Key == (x + start_y * width))
+				{
 					return TileList[x + start_y * width];
+				}
+			}
 
 			return null;
 		}
@@ -87,14 +95,30 @@ namespace OpenGraal.Common.Levels
 			return TileList.Count;
 		}
 
-		internal int get_height()
+		public int get_tile_x(int index)
+		{
+			return index % 16 + index / 512 * 16;
+		}
+
+		public int get_tile_y(int index)
+		{
+			return index / 16 - index / 512 * 32;
+		}
+
+		public int get_tile_index(int x, int y)
+		{
+			return x / 16 * 512 + x % 16 + y * 16;
+		}
+
+		public int get_height()
 		{
 			return 64;
 		}
 
-		internal int get_width()
+		public int get_width()
 		{
 			return 64;
 		}
+		#endregion
 	}
 }

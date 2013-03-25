@@ -129,7 +129,6 @@ namespace OpenGraal.Common.Levels
 				gy++;
 			}
 
-			//System.Console.WriteLine("Name: " + MapName + " | Width: " + MapWidth + ", Height: " + MapHeight + " | Level Count: " + MapLevels.Length);
 			return 1;
 		}
 
@@ -228,8 +227,6 @@ namespace OpenGraal.Common.Levels
 					}
 				}
 			}
-
-			//System.Console.WriteLine("File: " + MapName + " | Level Count: " + MapLevels.Length);
 		}
 
 		public int Save(string GmapDirectory)

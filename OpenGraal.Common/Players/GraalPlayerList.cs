@@ -40,7 +40,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Add Player to Playerlist (or return player)
 		/// </summary>
-		public GraalPlayer AddPlayer(Int16 Id)
+		public virtual GraalPlayer AddPlayer(Int16 Id)
 		{
 			GraalPlayer pl = FindPlayer(Id);
 			if (pl == null)
@@ -56,7 +56,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Delete Player from Playerlist
 		/// </summary>
-		public bool DeletePlayer(Int16 pId)
+		public virtual bool DeletePlayer(Int16 pId)
 		{
 			return PlayerList.Remove(pId);
 		}
@@ -64,7 +64,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Find Player by Id
 		/// </summary>
-		public GraalPlayer FindPlayer(Int16 Id)
+		public virtual GraalPlayer FindPlayer(Int16 Id)
 		{
 			GraalPlayer player;
 			if (PlayerList.TryGetValue(Id, out player))
@@ -75,7 +75,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Find Player by Account
 		/// </summary>
-		public GraalPlayer FindPlayer(String Account)
+		public virtual GraalPlayer FindPlayer(String Account)
 		{
 			GraalPlayer rc = null;
 			foreach (KeyValuePair<Int16, GraalPlayer> Player in PlayerList)
@@ -95,7 +95,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Find Player by Id/Account
 		/// </summary>
-		public GraalPlayer FindPlayer(String pAccount, Int16 pId)
+		public virtual GraalPlayer FindPlayer(String pAccount, Int16 pId)
 		{
 			foreach (KeyValuePair<Int16, GraalPlayer> Player in PlayerList)
 			{
@@ -106,7 +106,7 @@ namespace OpenGraal.Common.Players
 			return null;
 		}
 
-		public int Count()
+		public virtual int Count()
 		{
 			return PlayerList.Count;
 		}

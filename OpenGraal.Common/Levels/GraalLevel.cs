@@ -224,6 +224,7 @@ namespace OpenGraal.Common.Levels
 			foreach (CString lvlDat in levelData)
 			{
 				line++;
+				
 				CStringList words = new CStringList();
 				words.Load(lvlDat.Text, ' ');
 				if (words.Count <= 0)
@@ -260,7 +261,7 @@ namespace OpenGraal.Common.Levels
 					{
 						int tile_index = this.Base64Decode(data.Text.Substring(i, 2));
 						int x = start_x + i / 2;
-
+						
 						GraalLevelTile tile = this.layers[layer].AddTile(x, start_y, width, tile_index);
 					}
 					#endregion
@@ -516,11 +517,12 @@ namespace OpenGraal.Common.Levels
 			glEnable(GL_ALPHA_TEST);
 			*/
 			/* Render Tiles */
+			/*
 			for (int i = 0; i < 4096; i++)
 			{
 				tiles[i].Render((i % 64) * 16, (i / 64) * 16);
 			}
-
+			*/
 			/*
 			glDisable(GL_ALPHA_TEST);
 			glDisable(GL_BLEND);
@@ -543,6 +545,14 @@ namespace OpenGraal.Common.Levels
 						obj.Add((dynamic)l.Value.ScriptObject);
 				}
 				return obj;
+			}
+		}
+
+		public Dictionary<int, GraalLevelTileList> Layers
+		{
+			get
+			{
+				return this.layers;
 			}
 		}
 

@@ -47,6 +47,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Animations\Animation.cs" />
+    <Compile Include="Animations\Frame.cs" />
+    <Compile Include="Animations\Sprite.cs" />
     <Compile Include="Levels\GraalLevelLink.cs" />
     <Compile Include="Levels\GraalLevel.cs" />
     <Compile Include="Levels\GraalLevelSign.cs" />
