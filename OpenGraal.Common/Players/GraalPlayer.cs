@@ -131,6 +131,7 @@ namespace OpenGraal.Common.Players
 		/// Member Variables
 		/// </summary>
 		protected CString PropBuffer = new CString();
+		protected CSocket Server = null;
 		#endregion
 
 		#region Attribute Variables
@@ -160,6 +161,14 @@ namespace OpenGraal.Common.Players
 			this.Id = Id;
 			this._colorManager = new ColorManager(new ColorManager.dSendColors(SendColors));
 			this._flagManager = new FlagManager(new FlagManager.dSendFlag(SendFlag));
+		}
+
+		public GraalPlayer(Int16 Id, CSocket socket)
+		{
+			this.Id = Id;
+			this._colorManager = new ColorManager(new ColorManager.dSendColors(SendColors));
+			this._flagManager = new FlagManager(new FlagManager.dSendFlag(SendFlag));
+			this.Server = socket;
 		}
 		#endregion
 
@@ -676,7 +685,8 @@ namespace OpenGraal.Common.Players
 		public void SendProp(Properties PropId)
 		{
 			PropBuffer.Write(new CString() + (byte)PropId + GetProp(PropId));
-			//	Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLSETPROPS + (short)this.Id + (byte)PropId + GetProp(PropId));
+			if (this.Server != null)
+				this.Server.SendPacket(new CString() + (byte)103 + (byte)7 + (short)this.Id + (byte)PropId + GetProp(PropId));
 		}
 
 		/// <summary>
@@ -702,7 +712,7 @@ namespace OpenGraal.Common.Players
 			if (Weapon == null)
 				return;
 
-			//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLADDWEP + (short)Id + Weapon.Name);
+			this.Server.SendPacket(new CString() + (byte)103 + (byte)10 + (short)Id + Weapon.Name);
 			_weaponList.Add(Weapon);
 		}
 
@@ -711,7 +721,7 @@ namespace OpenGraal.Common.Players
 		/// </summary>
 		public void AddWeapon(String WeaponName)
 		{
-			ServerWeapon Weapon = null;// Server.FindWeapon(WeaponName);
+			ServerWeapon Weapon = null;//Server.FindWeapon(WeaponName);
 			if (Weapon != null)
 				this.AddWeapon(Weapon);
 		}
@@ -774,6 +784,15 @@ namespace OpenGraal.Common.Players
 				//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLSETSTATUS + (short)id + (byte)0 + (byte)Status.ALLOWWEAPONS);
 			}
 		}
+
+		/// <summary>
+		/// Call NPC Events
+		/// </summary>
+		public void CallNPCs(String Event, object[] Args)
+		{
+			foreach (ServerWeapon e in _weaponList)
+				e.Call(Event, Args);
+		}
 		#endregion
 
 		#region Scripting Functions
@@ -792,7 +811,7 @@ namespace OpenGraal.Common.Players
 		/// <param name="Message"></param>
 		public void Say2(String Message)
 		{
-			//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLMSGSIGN + (short)Id + Message);
+			//this.Server.SendPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLMSGSIGN + (short)Id + Message);
 		}
 
 		/// <summary>

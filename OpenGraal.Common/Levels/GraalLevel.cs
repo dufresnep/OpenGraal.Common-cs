@@ -73,6 +73,7 @@ namespace OpenGraal.Common.Levels
 			{
 				Players.Add(Player);
 				this.CallNPCs("onPlayerEnters", new object[] { Player });
+				Player.CallNPCs("onPlayerEnters", new object[] { Player });
 			}
 		}
 
@@ -84,7 +85,9 @@ namespace OpenGraal.Common.Levels
 		{
 			if (Players.Contains(Player))
 			{
+				Player.CallNPCs("onPlayerLeaves", new object[] { Player });
 				Players.Remove(Player);
+				
 				this.CallNPCs("onPlayerLeaves", new object[] { Player });
 			}
 		}
@@ -118,6 +121,23 @@ namespace OpenGraal.Common.Levels
 			if (!NpcList.TryGetValue(Id, out npc))
 			{
 				npc = new GraalLevelNPC(this, Id);
+				lock (this.TimerLock)
+				{
+					NpcList[Id] = npc;
+				}
+			}
+			return npc;
+		}
+
+		/// <summary>
+		/// Gets a npc from the level with the specified level id.
+		/// </summary>
+		public GraalLevelNPC GetNPC(CSocket socket, int Id)
+		{
+			GraalLevelNPC npc = null;
+			if (!NpcList.TryGetValue(Id, out npc))
+			{
+				npc = new GraalLevelNPC(socket, this, Id);
 				lock (this.TimerLock)
 				{
 					NpcList[Id] = npc;
@@ -219,12 +239,243 @@ namespace OpenGraal.Common.Levels
 			if (levelData.Count < 1)
 				return false;
 
+			// Grab file version.
+			string fileVersion = levelData.Get(0).ReadChars(8);
+
+			// Determine the level type.
+			int v = -1;
+			if (fileVersion == "GLEVNW01") v = 0;
+			else if (fileVersion == "GR-V1.03" || fileVersion == "GR-V1.02" || fileVersion == "GR-V1.01") v = 1;
+			else if (fileVersion == "Z3-V1.04" || fileVersion == "Z3-V1.03") v = 2;
+
+			// Not a level.
+			if (v == -1) return false;
+
+			// Load the correct level.
+			if (v == 0) return this.LoadNW(levelData);
+			if (v == 1) return this.LoadGraal(levelData.Join("\n"), fileVersion);
+			if (v == 2) return this.LoadZelda(levelData.Join("\n"), fileVersion);
+			return false;
+
+		}
+
+		#region LoadGraal
+		private bool LoadGraal(CString levelData, string fileVersion)
+		{
+			return false;
+		}
+		#endregion
+
+		#region LoadZelda
+		private bool LoadZelda(CString levelData, string fileVersion)
+		{
+			// Get the appropriate filesystem.
+			//CFileSystem* fileSystem = server->getFileSystem();
+			//if (server->getSettings()->getBool("nofoldersconfig", false) == false)
+			//	fileSystem = server->getFileSystem(FS_LEVEL);
+
+			// Path-To-File
+			//actualLevelName = levelName = pLevelName;
+			//fileName = fileSystem->find(pLevelName);
+			//modTime = fileSystem->getModTime(pLevelName);
+
+			// Check if it is actually a .graal level.  The 1.39-1.41r1 client actually
+			// saved .zelda as .graal.
+			if (fileVersion.Substring(0, 2) == "GR")
+				return this.LoadGraal(levelData, fileVersion);
+
+			int v = -1;
+			if (fileVersion == "Z3-V1.03") v = 3;
+			else if (fileVersion == "Z3-V1.04") v = 4;
+			if (v == -1) return false;
+
+			#region Load tiles.
+			bool layerExists = false;
+
+			foreach (KeyValuePair<int, GraalLevelTileList> l in this.layers)
+				if (l.Key == 0)
+					layerExists = true;
+
+			if (!layerExists)
+				this.layers[0] = new GraalLevelTileList();
+			{
+				int bits = (v > 4 ? 13 : 12);
+				int read = 0;
+				uint buffer = 0;
+				long code = 0;
+				int[] tiles = new int[2] { -1, -1 };
+				int boardIndex = 0;
+				int count = 1;
+				bool doubleMode = false;
+
+				// Read the tiles.
+				while (boardIndex < 64*64 && levelData.BytesLeft != 0)
+				{
+					// Every control code/tile is either 12 or 13 bits.  WTF.
+					// Read in the bits.
+					while (read < bits)
+					{
+						buffer += ((uint)levelData.ReadGByte1()) << read;
+						read += 8;
+					}
+
+					// Pull out a single 12/13 bit code from the buffer.
+					code = buffer & (bits == 12 ? 0xFFF : 0x1FFF);
+					buffer >>= bits;
+					read -= bits;
+
+					Console.WriteLine("Code&bits: " + (code & (bits == 12 ? 0x800 : 0x1000)));
+					// See if we have an RLE control code.
+					// Control codes determine how the RLE scheme works.
+					if ((code & (bits == 12 ? 0x800 : 0x1000)) != 0)
+					{
+						
+						// If the 0x100 bit is set, we are in a double repeat mode.
+						// {double 4}56 = 56565656
+						if ((code & 0x100) != 0) doubleMode = true;
+
+						// How many tiles do we count?
+						count = (int)(code & 0xFF);
+						continue;
+					}
+
+					// If our count is 1, just read in a tile.  This is the default mode.
+					if (count == 1)
+					{
+						GraalLevelTile tile = this.layers[0].AddTile(boardIndex++, (int)code);
+						continue;
+					}
+
+					// If we reach here, we have an RLE scheme.
+					// See if we are in double repeat mode or not.
+					if (doubleMode)
+					{
+						// Read in our first tile.
+						if (tiles[0] == -1)
+						{
+							tiles[0] = (int)code;
+							continue;
+						}
+
+						// Read in our second tile.
+						tiles[1] = (int)code;
+
+						// Add the tiles now.
+						for (int i = 0; i < count && boardIndex < 64*64-1; ++i)
+						{
+							GraalLevelTile tile = this.layers[0].AddTile(boardIndex++, tiles[0]);
+							GraalLevelTile tile2 = this.layers[0].AddTile(boardIndex++, tiles[1]);
+						}
+
+						// Clean up.
+						tiles[0] = tiles[1] = -1;
+						doubleMode = false;
+						count = 1;
+					}
+					// Regular RLE scheme.
+					else
+					{
+						GraalLevelTile tile = null;
+						for (int i = 0; i < count && boardIndex < 64*64; ++i)
+							tile = this.layers[0].AddTile(boardIndex++, (int)code);
+
+						count = 1;
+					}
+				}
+			}
+			#endregion
+
+			#region Load the links.
+			{
+				while (levelData.BytesLeft != 0)
+				{
+					CString line = levelData.ReadString('\n');
+					if (line.Length == 0 || line.Text == "#") break;
+
+					// Assemble the level string.
+
+					CStringList vline = new CStringList();
+					vline.Load(line.Text, ' ');
+					CString level = vline.Get(0);
+					if (vline.Count > 7)
+					{
+						for (int i = 0; i < vline.Count - 7; ++i)
+							level += " " + vline.Get(1 + i);
+					}
+
+					int offset = vline.Count - 7;
+
+					//GraalLevelLink link = new GraalLevelLink(vline.Get(0).Text, vline.Get(1).ToInt(), vline.Get(2).ToInt(), vline.Get(3).ToInt(), vline.Get(4).ToInt(),vline.Get(5).Text, vline.Get(6).Text);
+					
+					//this.LinkList.Add(this.LinkList.Count + 1, link);
+				}
+			}
+			#endregion
+
+			#region Load the baddies.
+			{
+				while (levelData.BytesLeft != 0)
+				{
+					byte x = levelData.ReadGUByte1();
+					byte y = levelData.ReadGUByte1();
+					byte type = levelData.ReadGUByte1();
+
+					// Ends with an invalid baddy.
+					if (x == -1 && y == -1 && type == -1)
+					{
+						levelData.ReadString('\n');	// Empty verses.
+						break;
+					}
+					/*
+					// Add the baddy.
+					TLevelBaddy* baddy = addBaddy((float)x, (float)y, type);
+					if (baddy == 0)
+						continue;
+
+					// Only v1.04+ baddies have verses.
+					if (v > 3)
+					{
+						// Load the verses.
+						std::vector<CString> bverse = fileData.readString("\n").tokenize("\\");
+						CString props;
+						for (char j = 0; j < (char)bverse.size(); ++j)
+							props >> (char)(BDPROP_VERSESIGHT + j) >> (char)bverse[j].length() << bverse[j];
+						if (props.length() != 0) baddy->setProps(props);
+					}
+					*/
+				}
+			}
+			#endregion
+
+			#region Load signs.
+			{
+				while (levelData.BytesLeft != 0)
+				{
+					CString line = levelData.ReadString('\n');
+					if (line.Length == 0) break;
+
+					byte x = line.ReadGUByte1();
+					byte y = line.ReadGUByte1();
+					CString text = line.ReadString();
+
+					this.SignList.Add(this.SignList.Count+1, new GraalLevelSign(x, y, text.Text));
+				}
+			}
+			#endregion
+
+			return true;
+		}
+		#endregion
+
+		#region LoadNW
+		private bool LoadNW(CStringList levelData)
+		{
 			bool isNpcCodeLine = false, isSignCodeLine = false;
 			int line = 0;
 			foreach (CString lvlDat in levelData)
 			{
 				line++;
-				
+
 				CStringList words = new CStringList();
 				words.Load(lvlDat.Text, ' ');
 				if (words.Count <= 0)
@@ -250,18 +501,18 @@ namespace OpenGraal.Common.Levels
 
 					bool layerExists = false;
 
-					foreach (KeyValuePair<int,GraalLevelTileList> l in this.layers)
+					foreach (KeyValuePair<int, GraalLevelTileList> l in this.layers)
 						if (l.Key == layer)
 							layerExists = true;
 
 					if (!layerExists)
 						this.layers[layer] = new GraalLevelTileList();
-					
+
 					for (int i = 0; i < width * 2; i += 2)
 					{
 						int tile_index = this.Base64Decode(data.Text.Substring(i, 2));
 						int x = start_x + i / 2;
-						
+
 						GraalLevelTile tile = this.layers[layer].AddTile(x, start_y, width, tile_index);
 					}
 					#endregion
@@ -287,8 +538,8 @@ namespace OpenGraal.Common.Levels
 
 					this.LinkList.Add(this.LinkList.Count + 1, link);
 					#endregion
-				} 
-				else if (type == "SIGN"|| isSignCodeLine) // read npcs
+				}
+				else if (type == "SIGN" || isSignCodeLine) // read npcs
 				{
 					#region SIGN code
 					if (isSignCodeLine)
@@ -363,6 +614,7 @@ namespace OpenGraal.Common.Levels
 
 			return true;
 		}
+		#endregion
 
 		public void Save(CString pFileName)
 		{
@@ -391,6 +643,7 @@ namespace OpenGraal.Common.Levels
 					int current_start = 0;
 					for (int x = 0; x < tiles.get_width(); x++)
 					{
+						//Console.WriteLine("Save x-y: " + x + "-" + y);
 						GraalLevelTile tile = tiles.FindTile(x, y);
 
 						if (tile.GetIndex() == tile.transparent_index)

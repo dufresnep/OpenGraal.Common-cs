@@ -104,6 +104,7 @@ namespace OpenGraal.Common.Levels
 		public CString ImagePart;
 		public GraalLevel Level = null;
 		public SaveIndex Save = null;
+		internal CSocket Server;
 
 		/// <summary>
 		/// Override -> Error Text
@@ -119,6 +120,19 @@ namespace OpenGraal.Common.Levels
 		public GraalLevelNPC(GraalLevel Level, int Id)
 			: base(ScriptType.LEVELNPC)
 		{
+			this.Server = null;
+			this.Level = Level;
+			this.Id = Id;
+			this.Save = new SaveIndex(this, 10);
+		}
+
+		/// <summary>
+		/// Constructor
+		/// </summary>
+		public GraalLevelNPC(CSocket Server, GraalLevel Level, int Id)
+			: base(ScriptType.LEVELNPC)
+		{
+			this.Server = Server;
 			this.Level = Level;
 			this.Id = Id;
 			this.Save = new SaveIndex(this, 10);
@@ -129,7 +143,7 @@ namespace OpenGraal.Common.Levels
 		/// </summary>
 		public void SendProp(Properties PropId)
 		{
-			//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.NPCPROPSET + (int)this.Id + (byte)PropId + GetProp(PropId));
+			//this.Server.SendPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.NPCPROPSET + (int)this.Id + (byte)PropId + GetProp(PropId));
 		}
 
 		/// <summary>
@@ -230,12 +244,16 @@ namespace OpenGraal.Common.Levels
 				{
 					case Properties.IMAGE: // 0
 						this.Image = Packet.ReadChars(Packet.ReadGUByte1());
+						Console.WriteLine("NpcImg: " + this.Image);
 						break;
 
 					case Properties.SCRIPT: // 1
+						Console.WriteLine("Script: " + Packet.Text);
 						this.Script = Packet.ReadChars((int)Packet.ReadGUByte5()).Replace("\xa7", "\n");
 						if (this.Script.IndexOf("void") > 0 || this.Script.IndexOf("join(") > 0)
 							compileScript = true;
+
+						Console.WriteLine("Npcscript: " + this.Script);
 						break;
 
 					case Properties.NPCX: // 2 - obsolete
@@ -646,6 +664,10 @@ namespace OpenGraal.Common.Levels
 		/// </summary>
 		public ScriptLevelNpc() { }
 		public ScriptLevelNpc(IRefObject Ref)
+		{
+			this.Ref = (GraalLevelNPC)Ref;
+		}
+		public ScriptLevelNpc(CSocket socket, IRefObject Ref) : base(socket)
 		{
 			this.Ref = (GraalLevelNPC)Ref;
 		}

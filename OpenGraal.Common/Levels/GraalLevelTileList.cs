@@ -66,6 +66,24 @@ namespace OpenGraal.Common.Levels
 		}
 
 		/// <summary>
+		/// Add Tile to Tilelist (or return Tile)
+		/// </summary>
+		public GraalLevelTile AddTile(int boardindex, int tile_index)
+		{
+
+			GraalLevelTile pl = FindTile(boardindex);
+			if (pl == null)
+			{
+				GraalLevelTile Tile = new GraalLevelTile();
+				Tile.SetTile(tile_index);
+				TileList[boardindex] = Tile;
+				return Tile;
+			}
+
+			return pl;
+		}
+
+		/// <summary>
 		/// Delete Tile from Tilelist
 		/// </summary>
 		public bool DeleteTile(Int16 pId)
@@ -84,6 +102,23 @@ namespace OpenGraal.Common.Levels
 				if (t.Key == (x + start_y * width))
 				{
 					return TileList[x + start_y * width];
+				}
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Find Tile by Id/Account
+		/// </summary>
+		public GraalLevelTile FindTile(int boardindex)
+		{
+			int width = this.get_width();
+			foreach (KeyValuePair<int, GraalLevelTile> t in TileList)
+			{
+				if (t.Key == (boardindex))
+				{
+					return TileList[boardindex];
 				}
 			}
 

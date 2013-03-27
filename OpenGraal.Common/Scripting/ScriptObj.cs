@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using OpenGraal.Common.Players;
+using OpenGraal.Core;
 using System.Reflection;
 
 namespace OpenGraal.Common.Scripting
@@ -15,6 +16,7 @@ namespace OpenGraal.Common.Scripting
 		// -- Member Variables -- //
 		static public Random rand = new Random();
 		public List<ScriptEvent> ScriptEvents = new List<ScriptEvent>();
+		private  CSocket Server;
 		private Dictionary<String, ServerWeapon> _weaponList;
 		public Dictionary<String, ServerWeapon> WeaponList
 		{
@@ -57,6 +59,7 @@ namespace OpenGraal.Common.Scripting
 		/// Constructor
 		/// </summary>
 		public ScriptObj(){}
+		public ScriptObj(CSocket Server) { this.Server = Server; }
 		public ScriptObj(GraalPlayerList PL, int NWTime) 
 		{
 			this.PlayerManager = PL;
@@ -83,12 +86,14 @@ namespace OpenGraal.Common.Scripting
 		/// </summary>
 		public void RunEvents()
 		{
+		
 			// Run Timeout
 			if (this.timeout > 0.0)
 			{
 				this.timeout -= 0.05;
 				if (this.timeout <= 0.0)
 					this.Call("onTimeout", null);
+				
 			}
 
 			// Run Scheduled Events
@@ -101,6 +106,7 @@ namespace OpenGraal.Common.Scripting
 					if (e.FunctionTimer <= 0.0)
 					{
 						Call(e.FunctionName, e.FunctionArgs);
+						Console.WriteLine(e.FunctionName + " " + e.FunctionArgs);
 						ScriptEvents.RemoveAt(i);
 					}
 				}
@@ -204,6 +210,7 @@ namespace OpenGraal.Common.Scripting
 		public void SendToNC(String Message)
 		{
 			//Server.SendNCChat(Message, null);
+			this.SendToRC(Message);
 		}
 
 		/// <summary>
@@ -212,6 +219,16 @@ namespace OpenGraal.Common.Scripting
 		public void SendToRC(String Message)
 		{
 			//Server.SendRCChat(Message);
+			this.SendRCChat(Message);
+
+		}
+
+		/// <summary>
+		/// Send Text to NPC-Controls
+		/// </summary>
+		public void SendRCChat(String Message)
+		{
+			this.Server.SendPacket(new CString() + (byte)79 + Message);
 		}
 
 		/// <summary>

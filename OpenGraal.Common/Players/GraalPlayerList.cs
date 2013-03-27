@@ -54,6 +54,22 @@ namespace OpenGraal.Common.Players
 		}
 
 		/// <summary>
+		/// Add Player to Playerlist (or return player)
+		/// </summary>
+		public virtual GraalPlayer AddPlayer(Int16 Id, CSocket socket)
+		{
+			GraalPlayer pl = FindPlayer(Id);
+			if (pl == null)
+			{
+				GraalPlayer Player = new GraalPlayer(Id, socket);
+				PlayerList[Id] = Player;
+				return Player;
+			}
+
+			return pl;
+		}
+
+		/// <summary>
 		/// Delete Player from Playerlist
 		/// </summary>
 		public virtual bool DeletePlayer(Int16 pId)

@@ -15,14 +15,16 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Member Variables
 		/// </summary>
+		internal CSocket Server;
 		public String Image, Name;
 
 		/// <summary>
 		/// Constructor
 		/// </summary>
-		public ServerWeapon(String WeaponName, String WeaponImage, String WeaponScript)
+		public ServerWeapon(CSocket Server, String WeaponName, String WeaponImage, String WeaponScript)
 			: base(ScriptType.WEAPON)
 		{
+			this.Server = Server;
 			this.UpdateWeapon(WeaponName, WeaponImage, WeaponScript);
 		}
 
@@ -75,6 +77,11 @@ namespace OpenGraal.Common.Scripting
 		/// </summary>
 		public ScriptWeapon() { }
 		public ScriptWeapon(IRefObject Ref)
+		{
+			this.Ref = (ServerWeapon)Ref;
+		}
+
+		public ScriptWeapon(CSocket socket, IRefObject Ref) : base(socket)
 		{
 			this.Ref = (ServerWeapon)Ref;
 		}
