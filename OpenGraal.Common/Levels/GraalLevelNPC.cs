@@ -67,7 +67,7 @@ namespace OpenGraal.Common.Levels
 			PIXELX = 75,
 			PIXELY = 76,
 		};
-
+		public bool CompileScript = false;
 		/// <summary>
 		/// Member Variables
 		/// </summary>
@@ -234,8 +234,6 @@ namespace OpenGraal.Common.Levels
 		/// <param name="Packet"></param>
 		public void SetProps(CString Packet)
 		{
-			bool compileScript = false;
-
 			while (Packet.BytesLeft > 0)
 			{
 				Int32 PropId = Packet.ReadGUByte1();
@@ -251,7 +249,7 @@ namespace OpenGraal.Common.Levels
 						Console.WriteLine("Script: " + Packet.Text);
 						this.Script = Packet.ReadChars((int)Packet.ReadGUByte5()).Replace("\xa7", "\n");
 						if (this.Script.IndexOf("void") > 0 || this.Script.IndexOf("join(") > 0)
-							compileScript = true;
+							CompileScript = true;
 
 						Console.WriteLine("Npcscript: " + this.Script);
 						break;
@@ -420,7 +418,7 @@ namespace OpenGraal.Common.Levels
 			}
 
 			// Compile script if script changed.
-			//if (compileScript)
+			//if (CompileScript)
 			//	Server.Compiler.CompileAdd(this);
 		}
 	}
@@ -475,7 +473,7 @@ namespace OpenGraal.Common.Levels
 		/// </summary>
 		public double x
 		{
-			get { return Ref.PixelX / 16; }
+			get { return Convert.ToDouble(Ref.PixelX / 16.0); }
 			set { Ref.PixelX = Convert.ToInt32(value * 16.0); Ref.SendProp(GraalLevelNPC.Properties.PIXELX); }
 		}
 

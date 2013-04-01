@@ -64,6 +64,20 @@ namespace OpenGraal.Common.Levels
 				this._tileType = value;
 			}
 		}
+		public int Tilex
+		{
+			get
+			{
+				return ((this.TileId / 512) * 16 + this.TileId % 16) * 16;
+			}
+		}
+		public int Tiley
+		{
+			get
+			{
+				return ((this.TileId % 512) / 16) * 16;
+			}
+		}	
 		#endregion
 	}
 }

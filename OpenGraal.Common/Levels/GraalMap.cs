@@ -19,6 +19,7 @@ namespace OpenGraal.Common.Levels
 		public bool AutoMapping, LoadFullMap;
 		public string MapName, MapImage, MiniMapImage;
 		private GraalLevel[] MapLevels = new GraalLevel[] { };
+		private string _levelPath = "";
 		#endregion
 
 		#region Constructors / Destructors
@@ -44,13 +45,34 @@ namespace OpenGraal.Common.Levels
 		/// <summary>
 		/// Get Level from Map X / Map Y
 		/// </summary>
-		public string GetLevelAt(int MapX, int MapY)
+		public int GetLevelPosAt(int MapX, int MapY)
 		{
 			int pos = (MapX-1) + (MapY-1) * MapWidth;
 
-			return (pos < MapLevels.Length ? MapLevels[pos].Name : "");
+			return (pos < MapLevels.Length ? pos : -1);// (pos < MapLevels.Length ? MapLevels[pos].Name : "");
+		}
+		/*
+		/// <summary>
+		/// Get Level from Map X / Map Y
+		/// </summary>
+		public  Object GetLevelAt(int MapX, int MapY)
+		{
+			int pos = GetLevelPosAt(MapX, MapY);
+			if (pos != -1)
+				return this.MapLevels[pos];
+			else
+				return null;
+		}
+		*/
+		public int GetLevelX(int index)
+		{
+			return index % 64 + index / 512 * 64;
 		}
 
+		public int GetLevelY(int index)
+		{
+			return index / 64 - index / 512 * 128;
+		}
 		/// <summary>
 		/// Level Exists
 		/// </summary>
@@ -76,7 +98,11 @@ namespace OpenGraal.Common.Levels
 				this.Parse((StreamReader)reader);
 			}
 		}
-
+		public void ParseFile(String File, String Path)
+		{
+			this._levelPath = Path;
+			this.ParseFile(File);
+		}
 		public int Generate(string TemplateFileName = "")
 		{
 			int GmapLevelArea = ((this.MapWidth) * (this.MapHeight));
@@ -205,17 +231,22 @@ namespace OpenGraal.Common.Levels
 
 							if (line.Length > 0)
 							{
-								string[] levels = CString.untokenize(line).Replace("\r", "").Split('\n');
+
+								string[] levels = CString.untokenize(line.Replace(", ", ",")).Replace("\r", "").Split('\n');
+								
 								foreach (string level in levels)
 								{
-									
-									int pos = (gx-1) + (gy-1) * MapWidth;
-									if (pos <= MapLevels.Length)
+									if (level != String.Empty)
 									{
-										this.MapLevels[pos] = new GraalLevel(level, new object());
-										this.MapLevels[pos].Load(new CString() + level);
+										string levelName = level;
+
+										int pos = (gx - 1) + (gy - 1) * MapWidth;
+										if (pos < MapLevels.Length)
+										{
+											this.AddLevel(levelName, pos);
+										}
+										gx++;
 									}
-									gx++;
 								}
 							}
 
@@ -227,6 +258,12 @@ namespace OpenGraal.Common.Levels
 					}
 				}
 			}
+		}
+
+		public virtual void AddLevel(string level, int pos)
+		{
+			this.MapLevels[pos] = new GraalLevel(level, new object());
+			this.MapLevels[pos].Load(new CString() + this._levelPath + level);
 		}
 
 		public int Save(string GmapDirectory)
@@ -282,5 +319,17 @@ namespace OpenGraal.Common.Levels
 			return 1;
 		}
 		#endregion
+
+		public string LevelPath
+		{
+			get
+			{
+				return this._levelPath;
+			}
+			set
+			{
+				this._levelPath = value;
+			}
+		}
 	}
 }

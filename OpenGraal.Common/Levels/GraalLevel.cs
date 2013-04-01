@@ -20,13 +20,16 @@ namespace OpenGraal.Common.Levels
 		public Dictionary<int, GraalLevelLink> LinkList = new Dictionary<int, GraalLevelLink>();
 		public FlagManager FlagManager = null;
 		public List<GraalPlayer> Players = new List<GraalPlayer>();
-		public short[] Tiles = new short[4096];
+		//public short[] Tiles = new short[4096];
 		public uint ModTime;
 		public string Name;
 		public object TimerLock = new object();
 		public CString base64 = new CString() + "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-		private GraalLevelTile[] tiles = new GraalLevelTile[4096];
-		private Dictionary<int, GraalLevelTileList> layers = new Dictionary<int, GraalLevelTileList>();
+		public GraalLevelTile[] Tiles = new GraalLevelTile[4096];
+		public Dictionary<int, GraalLevelTileList> layers = new Dictionary<int, GraalLevelTileList>();
+		public bool isOnMap { get; set; }
+		public int MapPositionX { get; set; }
+		public int MapPositionY { get; set; }
 		#endregion
 
 		#region	Constructor /  Destructor
@@ -181,7 +184,7 @@ namespace OpenGraal.Common.Levels
 		{
 			if (x < 0 || x >= 64 || y < 0 || y >= 64)
 				return true;
-			return IsTileWall(Tiles[(int)x + ((int)y) * 64]);
+			return IsTileWall(Tiles[(int)x + ((int)y) * 64].TileId);
 		}
 
 		/// <summary>
@@ -191,7 +194,7 @@ namespace OpenGraal.Common.Levels
 		{
 			if (x < 0 || x >= 64 || y < 0 || y >= 64)
 				return false;
-			return IsTileWater(Tiles[(int)x + ((int)y) * 64]);
+			return IsTileWater(Tiles[(int)x + ((int)y) * 64].TileId);
 		}
 
 		/// <summary>
@@ -230,6 +233,11 @@ namespace OpenGraal.Common.Levels
 		/*
 		 * Thanks to the Gonstruct source for some help with the Load and Save functions!
 		 */
+		public bool Load(string pFileName)
+		{
+			return this.Load(new CString() + pFileName);
+		}
+
 		public bool Load(CString pFileName)
 		{
 			CStringList levelData = new CStringList();
@@ -575,44 +583,51 @@ namespace OpenGraal.Common.Levels
 				else if (type == "NPC" || isNpcCodeLine) // read npcs
 				{
 					#region NPC code
-					if (isNpcCodeLine)
-					{
-						if (type == "NPCEND")
-						{
-							isNpcCodeLine = false;
-						}
-						else
-						{
-							GraalLevelNPC npc = this.NpcList[this.NpcList.Count];
-							npc.Script += lvlDat.Text;
-							npc.Script += "\n";
-
-							this.NpcList[this.NpcList.Count] = npc;
-						}
-					}
-					else
-					{
-						GraalLevelNPC npc = new GraalLevelNPC(this, this.NpcList.Count + 1);//this.NpcList.Add(add_npc();
-						npc.Image = words.Get(1).Text;
-
-						if (npc.Image == "-")
-							npc.Image = "";
-
-						float rx, ry;
-						float.TryParse(words.Get(2).Text, out rx);
-						float.TryParse(words.Get(3).Text, out ry);
-						npc.GMapX = (byte)rx;
-						npc.GMapY = (byte)ry;
-
-						isNpcCodeLine = true;
-
-						this.NpcList.Add(this.NpcList.Count + 1, npc);
-					}
+					isNpcCodeLine = this.AddNPC(isNpcCodeLine, lvlDat, words, type);
 					#endregion
 				}
 			}
 
 			return true;
+		}
+
+		public virtual bool AddNPC(bool isNpcCodeLine, CString lvlDat, CStringList words, string type)
+		{
+			if (isNpcCodeLine)
+			{
+				if (type == "NPCEND")
+				{
+					isNpcCodeLine = false;
+				}
+				else
+				{
+					GraalLevelNPC npc = this.NpcList[this.NpcList.Count];
+					npc.Script += lvlDat.Text;
+					npc.Script += "\n";
+
+					this.NpcList[this.NpcList.Count] = npc;
+				}
+			}
+			else
+			{
+				GraalLevelNPC npc = new GraalLevelNPC(this, this.NpcList.Count + 1);
+				npc.Image = words.Get(1).Text;
+
+				if (npc.Image == "-")
+					npc.Image = "";
+
+				float rx, ry;
+				float.TryParse(words.Get(2).Text, out rx);
+				float.TryParse(words.Get(3).Text, out ry);
+				npc.GMapX = (byte)rx;
+				npc.GMapY = (byte)ry;
+				npc.PixelX = Convert.ToInt32(npc.GMapX * 16.0);
+				npc.PixelY = Convert.ToInt32(npc.GMapY * 16.0);
+				isNpcCodeLine = true;
+
+				this.NpcList.Add(this.NpcList.Count + 1, npc);
+			}
+			return isNpcCodeLine;
 		}
 		#endregion
 
