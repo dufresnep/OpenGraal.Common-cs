@@ -131,9 +131,9 @@ namespace OpenGraal.Common.Animations
 
 			for (int i = 0; i < _frames.Count; i++)
 			{
-				List<Frame> list = _frames[i];
+				List<Frame> list = _frames [i];
 				for (int j = 0; j < list.Count; j++)
-					list.Remove(list[j]);
+					list.Remove(list [j]);
 
 				list.Clear();
 			}
@@ -166,7 +166,11 @@ namespace OpenGraal.Common.Animations
 				for (int i = 1; i < lines.Count; i++)
 				{
 					CStringList words = new CStringList();
+					CStringList words2 = new CStringList();
+					CStringList words3 = new CStringList();
+
 					words.Load(lines.Get(i).Text, ' ');
+
 					if (words.Count < 1)
 						continue;
 
@@ -186,36 +190,56 @@ namespace OpenGraal.Common.Animations
 					{
 						_isSingleDir = words.Get(1).ToBool();
 					}
-					else if (words.Get(0).Text == "SPRITE" && words.Count == 7)
+					else if (words.Get(0).Text == "SPRITE")// && words.Count == 7)
 					{
-						_spriteList.Add(_spriteList.Count+1,new Sprite(words.Get(1).ToInt(), words.Get(2), words.Get(3).ToInt(), words.Get(4).ToInt(), words.Get(5).ToInt(), words.Get(6).ToInt()));
+						Console.WriteLine("Sprite Add - Id: " + words.Get(1).Text + " - Word Count: " + words.Count);
+
+						this._spriteList.Add(words.Get(1).ToInt(), new Sprite(words.Get(1).ToInt(), words.Get(2), words.Get(3).ToInt(), words.Get(4).ToInt(), words.Get(5).ToInt(), words.Get(6).ToInt()));
 					}
 					else if (words.Get(0).Text == "ANI" && words.Count == 1)
 					{
+						i++;
+
 						for (i++; i < lines.Count && lines.Get(i).Text != "ANIEND"; i++)
 						{
 							if (lines.Get(i).Text.IndexOf("PLAYSOUND") == 0)
 								continue;
 
 							List<Frame> list = new List<Frame>();
-							
-							words.Load(lines.Get(i).Text, ' ');
-							for (int j = 0; j < words.Count; j++)
+							Console.WriteLine("Test0: " + lines.Get(i).Text);
+							words2.Load(lines.Get(i).Text, ',');
+
+							for (int j = 0; j < words2.Count; j++)
 							{
-								int sprite, x, y;
-								sprite = words.Get(j).ToInt(); j++;
-								x = words.Get(j).ToInt(); j++;
-								y = words.Get(j).ToInt();
-								list.Add(new Frame(this._spriteList[sprite], x, y));
+								words3.Load(words2.Get(j).Text.Replace("  ", " ").Trim(), ' ');
+								/*
+								foreach (CString bla in words3)
+									Console.WriteLine("Bla: " + bla.Text);
+								*/
+								for (int k = 0; k < words3.Count; k++)
+								{
+									int sprite, x, y;
+									Console.WriteLine("Test: " + words3.Get(k).Text);
+
+									sprite = words3.Get(k).ToInt();
+									k++;
+									x = words3.Get(k).ToInt();
+									k++;
+									y = words3.Get(k).ToInt();
+									foreach (KeyValuePair<int,Sprite> spr in this._spriteList)
+										Console.WriteLine("Sprite test - Id1: " + spr.Key + " - Id2: " + spr.Value.SpriteId + " - Img: " + spr.Value.Img);
+									Console.WriteLine("Img" + this._spriteList [sprite].Img.Text);
+									list.Add(new Frame(this._spriteList [sprite], x, y));
+								}
 							}
-							_frames.Add(_frames.Count+1,list);
+							_frames.Add(_frames.Count + 1, list);
 						}
 					}
 				}
 
 				_max = (_isSingleDir ? _frames.Count : _frames.Count / 4);
 			}
-				else
+			else
 			{
 				return false;
 			}
@@ -231,14 +255,14 @@ namespace OpenGraal.Common.Animations
 			pStep = (pStep + 1) % _max;
 
 			//*pStep = (isloop ? (*pStep + 1) % max : (*pStep < max-1 ? *pStep + 1 : *pStep));
-			List<Frame> list = _frames[(_isSingleDir ? pStep : pStep * 4 + pDir)];
+			List<Frame> list = _frames [(_isSingleDir ? pStep : pStep * 4 + pDir)];
 
 			if (list == null)
 				return;
 
 			for (int i = 0; i < list.Count; i++)
 			{
-				Frame img = (Frame)list[i];
+				Frame img = (Frame)list [i];
 				if (img == null)
 					continue;
 
