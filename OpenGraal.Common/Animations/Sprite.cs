@@ -11,7 +11,7 @@ namespace OpenGraal.Common.Animations
 	{
 		#region Member Variables
 		private int _sprite, _x, _y, _w, _h;
-		private CString _img;
+		private CString _type, _file;
 		#endregion
 
 		#region Get/set value functions
@@ -79,20 +79,49 @@ namespace OpenGraal.Common.Animations
 		{
 			get
 			{
-				return this._img;
+				return this._file;
 			}
 			set
 			{
-				this._img = value;
+				this._file = value;
+			}
+		}
+
+		public CString Type
+		{
+			get
+			{
+				return this._type;
+			}
+			set
+			{
+				this._type = value;
+			}
+		}
+
+		public CString File
+		{
+			get
+			{
+				return this._file;
+			}
+			set
+			{
+				this._file = value;
 			}
 		}
 		#endregion
 
 		#region Constructor / Destructor
+		public Sprite()
+		{
+
+		}
+
 		public Sprite(int pSprite, CString pImage, int pX, int pY, int pW, int pH)
 		{
 			_sprite = pSprite;
-			_img = pImage;
+			_file = pImage;
 			_x = pX;
 			_y = pY;
 			_w = pW;
@@ -101,7 +130,7 @@ namespace OpenGraal.Common.Animations
 
 		~Sprite()
 		{
-			if (_img == null)
+			if (_file == null)
 				return;
 
 			//img.countChange(-1);
@@ -111,10 +140,55 @@ namespace OpenGraal.Common.Animations
 		#region Public functions
 		public void Render(int pX, int pY)
 		{
-			if (_img == null)
+			if (_file == null)
 				return;
 
 			//img.Render(pX, pY, x, y, w, h);
+		}
+		#endregion
+	}
+
+	public class StageSprite
+	{
+		#region Member Variables
+		private int _sprite, _x, _y;
+		#endregion
+
+		#region Get/set value functions
+		public int SpriteId
+		{
+			get
+			{
+				return this._sprite;
+			}
+			set
+			{
+				this._sprite = value;
+			}
+		}
+
+		public int X
+		{
+			get
+			{
+				return this._x;
+			}
+			set
+			{
+				this._x = value;
+			}
+		}
+
+		public int Y
+		{
+			get
+			{
+				return this._y;
+			}
+			set
+			{
+				this._y = value;
+			}
 		}
 		#endregion
 	}

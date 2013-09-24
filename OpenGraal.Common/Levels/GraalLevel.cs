@@ -776,25 +776,7 @@ namespace OpenGraal.Common.Levels
 
 		public void Render()
 		{
-			/*
-			glBindTexture(GL_TEXTURE_2D, tileset->getTexture());
-			glAlphaFunc(GL_GREATER, 0);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-			glEnable(GL_BLEND);
-			glEnable(GL_ALPHA_TEST);
-			*/
-			/* Render Tiles */
-			/*
-			for (int i = 0; i < 4096; i++)
-			{
-				tiles[i].Render((i % 64) * 16, (i / 64) * 16);
-			}
-			*/
-			/*
-			glDisable(GL_ALPHA_TEST);
-			glDisable(GL_BLEND);
-			*/
+			
 		}
 		#endregion
 

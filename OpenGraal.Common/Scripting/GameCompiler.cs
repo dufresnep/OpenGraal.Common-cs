@@ -172,7 +172,7 @@ namespace OpenGraal.Common.Scripting
 
 		public virtual void OutputError(string errorText)
 		{
-			Console.WriteLine(errorText);
+			//Console.WriteLine(errorText);
 		}
 
 		/// <summary>
@@ -193,7 +193,7 @@ namespace OpenGraal.Common.Scripting
 			int pos = NewScript.IndexOf("//#CLIENTSIDE");
 			if (pos >= 0)
 				NewScript = NewScript.Substring(0, pos);
-			Console.WriteLine(NewScript);
+			//Console.WriteLine(NewScript);
 			NewScript = Regex.Replace(
 				NewScript, 
 				"function\\s*([a-z0-9]+)\\s*\\((.*)\\)(\t|\r|\\s)*\\{(.*)\\}",
@@ -205,7 +205,7 @@ namespace OpenGraal.Common.Scripting
 				RegexOptions.IgnoreCase
 			);
 
-			Console.WriteLine("after regexp: "+ NewScript);
+			//Console.WriteLine("after regexp: "+ NewScript);
 
 			return NewScript;
 		}

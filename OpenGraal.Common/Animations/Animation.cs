@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Collections;
+using System.IO;
+using System.Text.RegularExpressions;
 
 using OpenGraal;
 using OpenGraal.Core;
@@ -16,18 +20,20 @@ namespace OpenGraal.Common.Animations
 		#region Member Variables
 		public bool loaded;
 		public CString name, real;
-		private bool _isLoop, _isContinuous, _isSingleDir;
+		private bool _isLoop, _isContinuous, _isSingleDir = false;
 		private CString _setBackTo;
-		private Dictionary<int, List<Frame>> _frames = new Dictionary<int, List<Frame>>();
-		private Dictionary<int, Sprite> _spriteList = new Dictionary<int, Sprite>();
 
-		//private Dictionary<int,TImage> reallist = new Dictionary<int,TImage>();
 		private int _max;
-		//private Sdl.thread thread;
+
+
+		private List<int> _waits = new List<int>();
+		private List<Frame> _frames = new List<Frame>();
+		private List<Sprite> _spriteList = new List<Sprite>();
+
 		#endregion
 
 		#region Get/set value functions
-		public Dictionary<int, Sprite> SpriteList
+		public List<Sprite> SpriteList
 		{
 			get
 			{
@@ -39,7 +45,7 @@ namespace OpenGraal.Common.Animations
 			}
 		}
 
-		public Dictionary<int, List<Frame>> Frames
+		public List<Frame> Frames
 		{
 			get
 			{
@@ -48,6 +54,18 @@ namespace OpenGraal.Common.Animations
 			set
 			{
 				this._frames = value;
+			}
+		}
+
+		public List<int> Waits
+		{
+			get
+			{
+				return this._waits;
+			}
+			set
+			{
+				this._waits = value;
 			}
 		}
 
@@ -113,189 +131,247 @@ namespace OpenGraal.Common.Animations
 		#endregion
 
 		#region Constructor / Destructor
-		public Animation(CString pName)
+		public Animation()
 		{
-			name = pName;
-			real = new CString() + pName.Text + pName.IndexOf('\\') + 1;
-			load();
-
-			//aniList.add(this);
+			
 		}
 
 		~Animation()
 		{
-			//aniList.Remove(this);
-
-			for (int i = 0; i < _spriteList.Count; i++)
-				_spriteList.Remove(i);
-
-			for (int i = 0; i < _frames.Count; i++)
-			{
-				List<Frame> list = _frames [i];
-				for (int j = 0; j < list.Count; j++)
-					list.Remove(list [j]);
-
-				list.Clear();
-			}
-
 			_spriteList.Clear();
 			_frames.Clear();
 		}
 		#endregion
 
 		#region Public functions
-		public bool load()
+		public static String nextLine(Stack<string> lines)
 		{
-			CStringList pFile = new CStringList();
-			pFile.Load(this.name.Text);
-			
-			/*
-			char[] buffer = new char[65535];
-			ulong len = sizeof(buffer);
-			int error = uncompress((Bytef *)buffer, (ulong)&en, (byte)pFile.Text, pFile.length());
-			if (error != Z_OK)
+			if (lines.Count > 0)
 			{
-				printf("Error Decompressing\n");
-				return false;
-			}
-			*/
-			CStringList lines = pFile;
+				String line = lines.Pop();
+				line.Replace("\n", "");
+				line.Replace("\r", "");
 
-			if (lines.Get(0).Text == "GANI0001")
-			{
-				for (int i = 1; i < lines.Count; i++)
-				{
-					CStringList words = new CStringList();
-					CStringList words2 = new CStringList();
-					CStringList words3 = new CStringList();
-
-					words.Load(lines.Get(i).Text, ' ');
-
-					if (words.Count < 1)
-						continue;
-
-					if (words.Get(0).Text == "CONTINUOUS" && words.Count == 2)
-					{
-						_isContinuous = words.Get(1).ToBool();
-					}
-					else if (words.Get(0).Text == "LOOP" && words.Count == 2)
-					{
-						_isLoop = words.Get(1).ToBool();
-					}
-					else if (words.Get(0).Text == "SETBACKTO" && words.Count == 2)
-					{
-						_setBackTo = words.Get(1);
-					}
-					else if (words.Get(0).Text == "SINGLEDIRECTION" && words.Count == 2)
-					{
-						_isSingleDir = words.Get(1).ToBool();
-					}
-					else if (words.Get(0).Text == "SPRITE")// && words.Count == 7)
-					{
-						Console.WriteLine("Sprite Add - Id: " + words.Get(1).Text + " - Word Count: " + words.Count);
-
-						this._spriteList.Add(words.Get(1).ToInt(), new Sprite(words.Get(1).ToInt(), words.Get(2), words.Get(3).ToInt(), words.Get(4).ToInt(), words.Get(5).ToInt(), words.Get(6).ToInt()));
-					}
-					else if (words.Get(0).Text == "ANI" && words.Count == 1)
-					{
-						i++;
-
-						for (i++; i < lines.Count && lines.Get(i).Text != "ANIEND"; i++)
-						{
-							if (lines.Get(i).Text.IndexOf("PLAYSOUND") == 0)
-								continue;
-
-							List<Frame> list = new List<Frame>();
-							Console.WriteLine("Test0: " + lines.Get(i).Text);
-							words2.Load(lines.Get(i).Text, ',');
-
-							for (int j = 0; j < words2.Count; j++)
-							{
-								words3.Load(words2.Get(j).Text.Replace("  ", " ").Trim(), ' ');
-								/*
-								foreach (CString bla in words3)
-									Console.WriteLine("Bla: " + bla.Text);
-								*/
-								for (int k = 0; k < words3.Count; k++)
-								{
-									int sprite, x, y;
-									Console.WriteLine("Test: " + words3.Get(k).Text);
-
-									sprite = words3.Get(k).ToInt();
-									k++;
-									x = words3.Get(k).ToInt();
-									k++;
-									y = words3.Get(k).ToInt();
-									foreach (KeyValuePair<int,Sprite> spr in this._spriteList)
-										Console.WriteLine("Sprite test - Id1: " + spr.Key + " - Id2: " + spr.Value.SpriteId + " - Img: " + spr.Value.Img);
-									Console.WriteLine("Img" + this._spriteList [sprite].Img.Text);
-									list.Add(new Frame(this._spriteList [sprite], x, y));
-								}
-							}
-							_frames.Add(_frames.Count + 1, list);
-						}
-					}
-				}
-
-				_max = (_isSingleDir ? _frames.Count : _frames.Count / 4);
+				return line;
 			}
 			else
 			{
+				return "";
+			}
+		}
+
+		public Sprite getSpriteDef(int id)
+		{
+			foreach (Sprite s in _spriteList)
+			{
+				if (s.SpriteId == id) return s;
+			}
+
+			return null;
+		}
+
+		public void loadFromFile(String path)
+		{
+			if (!path.Contains(".gani"))
+				path = path + "idle.gani";
+
+			//Console.WriteLine("Loading animation from " + path + "...");
+
+			Stack<string> revLines = new Stack<string>(System.IO.File.ReadAllLines(path));
+			Stack<string> lines = new Stack<string>();
+			foreach (string l in revLines)
+			{
+				lines.Push(l);
+			}
+
+			String line = nextLine(lines);
+			while (lines.Count > 0)
+			{
+				line = line.Trim();
+				line = Regex.Replace(line, @"[ ]{2,}", @" ");
+
+				string[] words = line.Split(new char[] { ' ' });
+				if (words.Count() == 0)
+				{
+					continue;
+				}
+
+				switch (words[0])
+				{
+					case "SINGLEDIRECTION":
+						{
+							_isSingleDir = true;
+							break;
+						}
+
+					case "SPRITE":
+						{
+							Sprite s = new Sprite();
+							s.SpriteId = int.Parse(words[1]);
+							s.Type = new CString(words[2]);
+							s.X = int.Parse(words[3]);
+							s.Y = int.Parse(words[4]);
+							s.Width = int.Parse(words[5]);
+							s.Height = int.Parse(words[6]);
+							_spriteList.Add(s);
+							break;
+						}
+
+					case "SCRIPT":
+						{
+							while (line != "SCRIPTEND")
+							{
+								line = nextLine(lines);
+							}
+							break;
+						}
+
+					case "ANI":
+						{
+							line = nextLine(lines);
+
+							while (line != "ANIEND")
+							{
+								if (line.Length == 0)
+								{
+									line = nextLine(lines);
+									continue;
+								}
+
+								if (line.Split(' ')[0] == "PLAYSOUND")
+								{
+									line = nextLine(lines);
+									continue;
+								}
+
+								Frame newFrame = new Frame();
+								for (int dir = 0; dir < ((_isSingleDir) ? 1 : 4); dir++)
+								{
+									string[] offsets = line.Split(new char[] { ',' });
+
+									newFrame.dirFrames[dir] = new DirFrame();
+									foreach (string offsetO in offsets)
+									{
+										string offset = offsetO.Trim();
+										offset = Regex.Replace(offset, @"[ ]{2,}", @" ");
+
+										string[] partsO = offset.Split(new char[] { ' ' });
+										string[] parts = new string[3];
+										int c = 0;
+										foreach (string p in partsO)
+										{
+											if (IsNumeric(p))
+											{
+												parts[c++] = p;
+											}
+										}
+
+										StageSprite newStageSprite = new StageSprite();
+
+										newStageSprite.SpriteId = int.Parse(parts[0]);
+										newStageSprite.X = int.Parse(parts[1]);
+										newStageSprite.Y = int.Parse(parts[2]);
+
+										newFrame.dirFrames[dir].sprites.Add(newStageSprite);
+									}
+
+									if (dir < ((_isSingleDir) ? 0 : 3))
+									{
+										line = nextLine(lines);
+									}
+								}
+
+								_frames.Add(newFrame);
+								_waits.Add(0);
+
+								line = nextLine(lines);
+								line = line.Trim();
+								line = Regex.Replace(line, @"[ ]{2,}", @" ");
+
+								while (true)
+								{
+									string[] toks = line.Split(' ');
+									if (toks[0] == "WAIT")
+									{
+										_waits[_frames.Count - 1] = int.Parse(toks[1]);
+									}
+									if (line == "ANIEND")
+									{
+										break;
+									}
+									else if (line.Length == 0 || line == "\n" || line == "\r" || !IsNumeric(toks[0]))
+									{
+										line = nextLine(lines);
+										line = line.Trim();
+										line = Regex.Replace(line, @"[ ]{2,}", @" ");
+									}
+									else
+									{
+										break;
+									}
+								}
+							}
+							break;
+						}
+				}
+
+				line = nextLine(lines);
+			}
+
+			//Console.WriteLine("Success.");
+		}
+
+		public bool isAbsolutePath(string p)
+		{
+			if (p.IndexOf(':') != -1)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		public string MakePath(string p, string top)
+		{
+			return (isAbsolutePath(p)) ? p : top + "/" + p;
+		}
+
+		
+
+		public virtual void Draw(int x, int y, int dir, object targetWindow, bool dontIncrement = false)
+		{
+			// OVERRIDE THIS
+		}
+
+		public virtual void Draw(int x, int y, int dir, object targetWindow, object spriteBatch, bool dontIncrement = false)
+		{
+			// OVERRIDE THIS
+		}
+
+		public static System.Boolean IsNumeric(System.Object Expression)
+		{
+			if (Expression == null || Expression is DateTime)
+				return false;
+
+			if (Expression is Int16 || Expression is Int32 || Expression is Int64 || Expression is Decimal || Expression is Single || Expression is Double || Expression is Boolean)
+				return true;
+
+			try
+			{
+				if (Expression is string)
+					Double.Parse(Expression as string);
+				else
+					Double.Parse(Expression.ToString());
+				return true;
+			}
+
+			catch
+			{ // just dismiss errors but return false
 				return false;
 			}
 
-			return true;
+			return false;
 		}
-
-		public virtual void render(int pX, int pY, int pDir, int pStep)
-		{
-			if (_frames.Count < 1)
-				return;
-
-			pStep = (pStep + 1) % _max;
-
-			//*pStep = (isloop ? (*pStep + 1) % max : (*pStep < max-1 ? *pStep + 1 : *pStep));
-			List<Frame> list = _frames [(_isSingleDir ? pStep : pStep * 4 + pDir)];
-
-			if (list == null)
-				return;
-
-			for (int i = 0; i < list.Count; i++)
-			{
-				Frame img = (Frame)list [i];
-				if (img == null)
-					continue;
-
-				img.Render(pX, pY);
-			}
-		}
-
-		public static Animation Find(CString pName)
-		{
-			/*
-			for (int i = 0; i < aniList.Count; i++)
-			{
-				TAnimation ani = (TAnimation)aniList[i];
-				if (ani.real == pName)
-					return ani;
-			}
-			*/
-			return new Animation((pName));
-		}
-		/*
-		public TImage findImage(CString pName)
-		{
-			for (int i = 0; i < reallist.Count; i++)
-			{
-				TImage img = (TImage)reallist[i];
-				if (img.Real == pName)
-					return img;
-			}
-
-			reallist.Add(reallist.Count+1, TImage.Find(pName));
-			return (TImage)reallist[reallist.Count];
-		}
-		*/
 		#endregion
 	}
 }
