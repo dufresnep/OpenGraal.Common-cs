@@ -245,9 +245,9 @@ namespace OpenGraal.Common.Levels
 
 				case Properties.SCRIPT: // 1
 						//Console.WriteLine("Script: " + Packet.Text);
-					this.Script = Packet.ReadChars ((int)Packet.ReadGUByte5 ()).Replace ("\xa7", "\n");
-					if (this.Script.IndexOf ("void") > 0 || this.Script.IndexOf ("join(") > 0)
-						CompileScript = true;
+					//this.Script = Packet.ReadChars ((int)Packet.ReadGUByte5 ()).Replace ("\xa7", "\n");
+					//if (this.Script.IndexOf ("void") > 0 || this.Script.IndexOf ("join(") > 0)
+					//	CompileScript = true;
 
 						//Console.WriteLine("Npcscript: " + this.Script);
 					break;

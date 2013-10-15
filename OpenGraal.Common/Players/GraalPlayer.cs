@@ -12,7 +12,9 @@ namespace OpenGraal.Common.Players
 {
 	public class GraalPlayer
 	{
+
 		#region Enumerators
+
 		/// <summary>
 		/// Player Properties Enum
 		/// </summary>
@@ -30,11 +32,11 @@ namespace OpenGraal.Common.Players
 			SHIELDPOWER	= 9,
 			ANIMATION	= 10,
 			HEADIMAGE	= 11,
-			CURCHAT		= 12,
+			CURCHAT = 12,
 			PLCOLORS	= 13,
 			PLAYERID	= 14,
-			PLAYERX		= 15,
-			PLAYERY		= 16,
+			PLAYERX = 15,
+			PLAYERY = 16,
 			PLSPRITE	= 17,
 			PLSTATUS	= 18,
 			CARRYSPRITE	= 19,
@@ -49,7 +51,7 @@ namespace OpenGraal.Common.Players
 			DEATHSCOUNT	= 28,
 			ONLINESECS	= 29,
 			IPADDRESS	= 30,
-			UDPPORT		= 31,
+			UDPPORT = 31,
 			ALIGNMENT	= 32,
 			ADDITFLAGS	= 33,
 			ACCOUNTNAME	= 34,
@@ -63,7 +65,7 @@ namespace OpenGraal.Common.Players
 			PLATTACHNPC = 42,
 			GMAPLEVELX	= 43,
 			GMAPLEVELY	= 44,
-			PLAYERZ		= 45,
+			PLAYERZ = 45,
 			GATTRIB6	= 46,
 			GATTRIB7	= 47,
 			GATTRIB8	= 48,
@@ -93,12 +95,12 @@ namespace OpenGraal.Common.Players
 			GATTRIB28	= 72,
 			GATTRIB29	= 73,
 			GATTRIB30	= 74,
-			OSTYPE		= 75,
+			OSTYPE = 75,
 			TEXTCODEPG	= 76,
 			UNKNOWN77	= 77,
-			PIXELX		= 78,
-			PIXELY		= 79,
-			PIXELZ		= 80,
+			PIXELX = 78,
+			PIXELY = 79,
+			PIXELZ = 80,
 			UNKNOWN81	= 81,
 			COMMUNITY	= 82,
 		};
@@ -124,17 +126,21 @@ namespace OpenGraal.Common.Players
 			Client = 0,
 			RC = 1
 		}
+
 		#endregion
 
 		#region Member Variables
+
 		/// <summary>
 		/// Member Variables
 		/// </summary>
 		protected CString PropBuffer = new CString();
 		protected CSocket Server = null;
+
 		#endregion
 
 		#region Attribute Variables
+
 		/// <summary>
 		/// Set Variables
 		/// </summary>
@@ -146,13 +152,15 @@ namespace OpenGraal.Common.Players
 		private ClientType _type = 0;
 		private bool _isLocalPlayer = true;
 		private double _hearts = 3;
-		private int _ap = 50, _arrows = 10, _bombs = 5, _bombPower = 1, _deaths = 0, _dir = 2, _fullHearts = 3, _glovePower = 1, _gralats = 0, _kills = 0, _magic = 0, _onlineTime = 0, _playerStatus = 0, _shieldPower = 1, _swordPower = 1, _gmapX = 0, _gmapY = 0, _pixelX = 0, _pixelY = 0;
+		public int _ap = 50, _arrows = 10, _bombs = 5, _bombPower = 1, _deaths = 0, _dir = 2, _fullHearts = 3, _glovePower = 1, _gralats = 0, _kills = 0, _magic = 0, _onlineTime = 0, _playerStatus = 0, _shieldPower = 1, _swordPower = 1, _gmapX = 0, _gmapY = 0, _pixelX = 0, _pixelY = 0;
 		private short _id = 0;
 		private string _account, _ani, _bodyImage, _chat, _headImage, _guild, _ipAddress, _nickname, _shieldImage, _swordImage;
-		private static int[] touchtestd = new int[] { 24, 8, 0, 32, 24, 56, 48, 32 };
+		private int[] _touchtestd = new int[] { 24, 8, 0, 32, 24, 56, 48, 32 };
+
 		#endregion
 
 		#region Class Constructors
+
 		/// <summary>
 		/// Constructor by Account / Id
 		/// </summary>
@@ -170,9 +178,11 @@ namespace OpenGraal.Common.Players
 			this._flagManager = new FlagManager(new FlagManager.dSendFlag(SendFlag));
 			this.Server = socket;
 		}
+
 		#endregion
 
 		#region Member Functions
+
 		/// <summary>
 		/// Adjust Levels
 		/// </summary>
@@ -233,9 +243,11 @@ namespace OpenGraal.Common.Players
 					this._guild = Nickname.Substring(len + 1, len2 - len - 1);
 			}
 		}
+
 		#endregion
 
 		#region Property Management Functions
+
 		/// <summary>
 		/// Get Property
 		/// </summary>
@@ -277,7 +289,7 @@ namespace OpenGraal.Common.Players
 					return new CString() + (byte)this._ani.Length + this._ani;
 
 				case Properties.HEADIMAGE: // 11
-					return new CString() + (byte)(this._headImage.Length+100) + this._headImage;
+					return new CString() + (byte)(this._headImage.Length + 100) + this._headImage;
 
 				case Properties.CURCHAT: // 12
 					return new CString() + (byte)this._chat.Length + this._chat;
@@ -313,20 +325,20 @@ namespace OpenGraal.Common.Players
 					return new CString() + (byte)this._bodyImage.Length + this._bodyImage;
 
 				case Properties.PIXELX: // 75
-				{
-					int res = (_pixelX < 0 ? -_pixelX : _pixelX) << 1;
-					if (_pixelX < 0)
-						res |= 0x0001;
-					return new CString() + (short)res;
-				}
+					{
+						int res = (_pixelX < 0 ? -_pixelX : _pixelX) << 1;
+						if (_pixelX < 0)
+							res |= 0x0001;
+						return new CString() + (short)res;
+					}
 
 				case Properties.PIXELY: // 76
-				{
-					int res = (_pixelY < 0 ? -_pixelY : _pixelY) << 1;
-					if (_pixelY < 0)
-						res |= 0x0001;
-					return new CString() + (short)res;
-				}
+					{
+						int res = (_pixelY < 0 ? -_pixelY : _pixelY) << 1;
+						if (_pixelY < 0)
+							res |= 0x0001;
+						return new CString() + (short)res;
+					}
 
 				default:
 					return new CString();
@@ -336,7 +348,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Set Properties
 		/// </summary>
-		public void SetProps(CString Packet)
+		public virtual void SetProps(CString Packet)
 		{
 			bool moved = false;
 			while (Packet.BytesLeft > 0)
@@ -378,48 +390,49 @@ namespace OpenGraal.Common.Players
 						break;
 
 					case Properties.SWORDPOWER: // 8
-					{
-						Int32 sp = Packet.ReadGUByte1();
-						if (sp > 4)
 						{
-							sp -= 30;
-							Int32 len = Packet.ReadGUByte1();
-							if (len > 0)
-								this._swordImage = Packet.ReadChars(len);
-						}
-						else this._swordImage = "sword" + sp + ".png";
+							Int32 sp = Packet.ReadGUByte1();
+							if (sp > 4)
+							{
+								sp -= 30;
+								Int32 len = Packet.ReadGUByte1();
+								if (len > 0)
+									this._swordImage = Packet.ReadChars(len);
+							} else
+								this._swordImage = "sword" + sp + ".png";
 						
-						this._swordPower = sp;
-						break;
-					}
+							this._swordPower = sp;
+							break;
+						}
 
 					case Properties.SHIELDPOWER: // 9
-					{
-						Int32 sp = Packet.ReadGUByte1();
-						if (sp > 3)
 						{
-							sp -= 10;
-							if (sp < 0) break;
-							Int32 len = Packet.ReadGUByte1();
-							if (len > 0)
-								this._shieldImage = Packet.ReadChars(len);
-						}
-						else this._shieldImage = "shield" + sp + ".png";
+							Int32 sp = Packet.ReadGUByte1();
+							if (sp > 3)
+							{
+								sp -= 10;
+								if (sp < 0)
+									break;
+								Int32 len = Packet.ReadGUByte1();
+								if (len > 0)
+									this._shieldImage = Packet.ReadChars(len);
+							} else
+								this._shieldImage = "shield" + sp + ".png";
 
-						this._shieldPower = sp;
-						break;
-					}
+							this._shieldPower = sp;
+							break;
+						}
 
 					case Properties.ANIMATION: // 10
 						this._ani = Packet.ReadChars(Packet.ReadGUByte1());
 						break;
 
 					case Properties.HEADIMAGE: // 11
-					{
-						Int32 len = Packet.ReadGUByte1();
-						this._headImage = (len < 100 ? "head" + len + ".png" : Packet.ReadChars(len - 100));
-						break;
-					}
+						{
+							Int32 len = Packet.ReadGUByte1();
+							this._headImage = (len < 100 ? "head" + len + ".png" : Packet.ReadChars(len - 100));
+							break;
+						}
 
 					case Properties.CURCHAT: // 12
 						this._chat = Packet.ReadChars(Packet.ReadGUByte1());
@@ -487,12 +500,12 @@ namespace OpenGraal.Common.Players
 						break;
 
 					case Properties.EFFECTCOLOR: // 23
-					{
-						int len = Packet.ReadGUByte1();
-						if (len > 0)
-							Packet.ReadGUByte4();
-						break;
-					}
+						{
+							int len = Packet.ReadGUByte1();
+							if (len > 0)
+								Packet.ReadGUByte4();
+							break;
+						}
 
 					case Properties.CARRYNPC: // 24
 						Packet.ReadGUByte3();
@@ -631,28 +644,28 @@ namespace OpenGraal.Common.Players
 						break;
 
 					case Properties.PIXELX: // 78
-					{
-						int tmp = this._pixelX = Packet.ReadGUByte2();
+						{
+							int tmp = this._pixelX = Packet.ReadGUByte2();
 
-						// If the first bit is 1, our position is negative.
-						this._pixelX >>= 1;
-						if ((tmp & 0x0001) != 0)
-							this._pixelX = -this._pixelX;
-						moved = true;
-						break;
-					}
+							// If the first bit is 1, our position is negative.
+							this._pixelX >>= 1;
+							if ((tmp & 0x0001) != 0)
+								this._pixelX = -this._pixelX;
+							moved = true;
+							break;
+						}
 
 					case Properties.PIXELY: // 79
-					{
-						int tmp = this._pixelY = Packet.ReadGUByte2();
+						{
+							int tmp = this._pixelY = Packet.ReadGUByte2();
 
-						// If the first bit is 1, our position is negative.
-						this._pixelY >>= 1;
-						if ((tmp & 0x0001) != 0)
-							this._pixelY = -this._pixelY;
-						moved = true;
-						break;
-					}
+							// If the first bit is 1, our position is negative.
+							this._pixelY >>= 1;
+							if ((tmp & 0x0001) != 0)
+								this._pixelY = -this._pixelY;
+							moved = true;
+							break;
+						}
 
 					case Properties.PIXELZ: // 80
 						Packet.ReadGUByte2();
@@ -673,7 +686,7 @@ namespace OpenGraal.Common.Players
 
 			if (moved && _level != null)
 			{
-				GraalLevelNPC npc = _level.isOnNPC(_pixelX + touchtestd[Dir*2], _pixelY + touchtestd[Dir*2+1]);
+				GraalLevelNPC npc = _level.isOnNPC(_pixelX + _touchtestd[Dir * 2], _pixelY + _touchtestd[Dir * 2 + 1]);
 				if (npc != null)
 					npc.Call("onPlayerTouchsMe", new object[] { this });
 			}
@@ -682,7 +695,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Send Prop to GServer
 		/// </summary>
-		public void SendProp(Properties PropId)
+		public virtual void SendProp(Properties PropId)
 		{
 			PropBuffer.Write(new CString() + (byte)PropId + GetProp(PropId));
 			if (this.Server != null)
@@ -700,9 +713,11 @@ namespace OpenGraal.Common.Players
 				PropBuffer.Clear();
 			}
 		}
+
 		#endregion
 
 		#region Weapon Management Functions
+
 		/// <summary>
 		/// Function -> Add Weapon to Player (by object)
 		/// </summary>
@@ -721,7 +736,7 @@ namespace OpenGraal.Common.Players
 		/// </summary>
 		public void AddWeapon(String WeaponName)
 		{
-			ServerWeapon Weapon = null;//Server.FindWeapon(WeaponName);
+			ServerWeapon Weapon = FindWeapon(WeaponName);
 			if (Weapon != null)
 				this.AddWeapon(Weapon);
 		}
@@ -793,9 +808,11 @@ namespace OpenGraal.Common.Players
 			foreach (ServerWeapon e in _weaponList)
 				e.Call(Event, Args);
 		}
+
 		#endregion
 
 		#region Scripting Functions
+
 		/// <summary>
 		/// Function -> SetAni (Set Animation + Gani Attributes)
 		/// </summary>
@@ -830,9 +847,11 @@ namespace OpenGraal.Common.Players
 		{
 			//Server.SendPM(this.Id, Message, false);
 		}
+
 		#endregion
 
 		#region Scripting Variables
+
 		/// <summary>
 		/// Functions -> Retrieve variables for scripting / update props
 		/// </summary>
@@ -842,64 +861,121 @@ namespace OpenGraal.Common.Players
 			set { _account = value; }
 		}
 
+		public virtual int[] Touchtestd
+		{
+			get { return _touchtestd; }
+			set { _touchtestd = value; }
+		}
+
 		public virtual string Ani
 		{
 			get { return _ani; }
-			set { _ani = value; this.SendProp(Properties.ANIMATION); }
+			set
+			{
+				_ani = value;
+				this.SendProp(Properties.ANIMATION);
+			}
 		}
 
 		public virtual int Ap
 		{
 			get { return _ap; }
-			set { _ap = value; this.SendProp(Properties.ALIGNMENT); }
+			set
+			{
+				_ap = value;
+				this.SendProp(Properties.ALIGNMENT);
+			}
 		}
 
 		public virtual ClientType Type
 		{
 			get { return _type; }
-			set { _type = value;  }
+			set { _type = value; }
 		}
 
 		public virtual int Arrows
 		{
 			get { return _arrows; }
-			set { if (_arrows != value) { _arrows = value; this.SendProp(Properties.ARROWSCOUNT); } }
+			set
+			{
+				if (_arrows != value)
+				{
+					_arrows = value;
+					this.SendProp(Properties.ARROWSCOUNT);
+				}
+			}
 		}
 
 		public virtual int GmapX
 		{
 			get { return this._gmapX; }
-			set { if (this._gmapX != value) { this._gmapX = value; this.SendProp(Properties.GMAPLEVELX); } }
+			set
+			{
+				if (this._gmapX != value)
+				{
+					this._gmapX = value;
+					this.SendProp(Properties.GMAPLEVELX);
+				}
+			}
 		}
 
 		public virtual int GmapY
 		{
 			get { return this._gmapY; }
-			set { if (this._gmapY != value) { this._gmapY = value; this.SendProp(Properties.GMAPLEVELY); } }
+			set
+			{
+				if (this._gmapY != value)
+				{
+					this._gmapY = value;
+					this.SendProp(Properties.GMAPLEVELY);
+				}
+			}
 		}
 
 		public virtual string BodyImage
 		{
 			get { return _bodyImage; }
-			set { _bodyImage = value; this.SendProp(Properties.BODYIMAGE); }
+			set
+			{
+				_bodyImage = value;
+				this.SendProp(Properties.BODYIMAGE);
+			}
 		}
 
 		public virtual int Bombs
 		{
 			get { return _bombs; }
-			set { if (_bombs != value) { _bombs = value; this.SendProp(Properties.BOMBSCOUNT); } }
+			set
+			{
+				if (_bombs != value)
+				{
+					_bombs = value;
+					this.SendProp(Properties.BOMBSCOUNT);
+				}
+			}
 		}
 
 		public virtual int BombPower
 		{
 			get { return _bombPower; }
-			set { if (_bombPower != value) { _bombPower = value; this.SendProp(Properties.BOMBPOWER); } }
+			set
+			{
+				if (_bombPower != value)
+				{
+					_bombPower = value;
+					this.SendProp(Properties.BOMBPOWER);
+				}
+			}
 		}
 
 		public virtual string Chat
 		{
 			get { return _chat; }
-			set { _chat = value; this.SendProp(Properties.CURCHAT); }
+			set
+			{
+				_chat = value;
+				this.SendProp(Properties.CURCHAT);
+			}
 		}
 
 		public virtual ColorManager Colors
@@ -916,19 +992,34 @@ namespace OpenGraal.Common.Players
 		public virtual int Darts
 		{
 			get { return this._arrows; }
-			set { if (this._arrows != value) { this._arrows = value; this.SendProp(Properties.ARROWSCOUNT); } }
+			set
+			{
+				if (this._arrows != value)
+				{
+					this._arrows = value;
+					this.SendProp(Properties.ARROWSCOUNT);
+				}
+			}
 		}
 
 		public virtual int Deaths
 		{
 			get { return this._deaths; }
-			set { this._deaths = value; this.SendProp(Properties.DEATHSCOUNT); }
+			set
+			{
+				this._deaths = value;
+				this.SendProp(Properties.DEATHSCOUNT);
+			}
 		}
 
 		public virtual int Dir
 		{
 			get { return this._dir; }
-			set { this._dir = value; this.SendProp(Properties.PLSPRITE); }
+			set
+			{
+				this._dir = value;
+				this.SendProp(Properties.PLSPRITE);
+			}
 		}
 
 		public virtual int Magic
@@ -940,13 +1031,21 @@ namespace OpenGraal.Common.Players
 		public virtual int PixelX
 		{
 			get { return this._pixelX; }
-			set { this._pixelX = value; }
+			set
+			{
+				this._pixelX = value;
+				this.SendProp(Properties.PIXELX);
+			}
 		}
 
 		public virtual int PixelY
 		{
 			get { return this._pixelY; }
-			set { this._pixelY = value; }
+			set
+			{
+				this._pixelY = value;
+				this.SendProp(Properties.PIXELY);
+			}
 		}
 
 		public virtual FlagManager Flags
@@ -965,46 +1064,75 @@ namespace OpenGraal.Common.Players
 			get { return this._ipAddress; }
 			set { this._ipAddress = value; }
 		}
+
 		public virtual int FullHearts
 		{
 			get { return this._fullHearts; }
-			set { this._fullHearts = value; this.SendProp(Properties.MAXPOWER); }
+			set
+			{
+				this._fullHearts = value;
+				this.SendProp(Properties.MAXPOWER);
+			}
 		}
 
 		public virtual int GlovePower
 		{
 			get { return this._glovePower; }
-			set { this._glovePower = value; this.SendProp(Properties.GLOVEPOWER); }
+			set
+			{
+				this._glovePower = value;
+				this.SendProp(Properties.GLOVEPOWER);
+			}
 		}
 
 		public virtual string Guild
 		{
 			get { return this._guild; }
-			set { SetGuild(value); this.SendProp(Properties.NICKNAME); }
+			set
+			{
+				SetGuild(value);
+				this.SendProp(Properties.NICKNAME);
+			}
 		}
 
 		public virtual int Gralats
 		{
 			get { return this._gralats; }
-			set { this._gralats = value; this.SendProp(Properties.RUPEESCOUNT); }
+			set
+			{
+				this._gralats = value;
+				this.SendProp(Properties.RUPEESCOUNT);
+			}
 		}
 
 		public virtual string Head
 		{
 			get { return this._headImage; }
-			set { this._headImage = value; this.SendProp(Properties.HEADIMAGE); }
+			set
+			{
+				this._headImage = value;
+				this.SendProp(Properties.HEADIMAGE);
+			}
 		}
 
 		public virtual string HeadImage
 		{
 			get { return this._headImage; }
-			set { this._headImage = value; this.SendProp(Properties.HEADIMAGE); }
+			set
+			{
+				this._headImage = value;
+				this.SendProp(Properties.HEADIMAGE);
+			}
 		}
 
 		public virtual double Hearts
 		{
 			get { return _hearts; }
-			set { this._hearts = value; this.SendProp(Properties.CURPOWER); }
+			set
+			{
+				this._hearts = value;
+				this.SendProp(Properties.CURPOWER);
+			}
 		}
 
 		public virtual short Id
@@ -1016,7 +1144,11 @@ namespace OpenGraal.Common.Players
 		public virtual int Kills
 		{
 			get { return this._kills; }
-			set { this._kills = value; this.SendProp(Properties.KILLSCOUNT); }
+			set
+			{
+				this._kills = value;
+				this.SendProp(Properties.KILLSCOUNT);
+			}
 		}
 
 		public virtual GraalLevel Level // should return levelobject
@@ -1028,55 +1160,91 @@ namespace OpenGraal.Common.Players
 		public virtual int Mp
 		{
 			get { return _magic; }
-			set { _magic = value; this.SendProp(Properties.MAGICPOINTS); }
+			set
+			{
+				_magic = value;
+				this.SendProp(Properties.MAGICPOINTS);
+			}
 		}
 
 		public virtual string Nickname
 		{
 			get { return _nickname; }
-			set { SetNick(value); this.SendProp(Properties.NICKNAME); }
+			set
+			{
+				SetNick(value);
+				this.SendProp(Properties.NICKNAME);
+			}
 		}
 
 		public virtual int Rupees
 		{
 			get { return _gralats; }
-			set { _gralats = value; this.SendProp(Properties.RUPEESCOUNT); }
+			set
+			{
+				_gralats = value;
+				this.SendProp(Properties.RUPEESCOUNT);
+			}
 		}
 
 		public virtual string Shield
 		{
 			get { return _shieldImage; }
-			set { _shieldImage = value; this.SendProp(Properties.SHIELDPOWER); }
+			set
+			{
+				_shieldImage = value;
+				this.SendProp(Properties.SHIELDPOWER);
+			}
 		}
 
 		public virtual string ShieldImage
 		{
 			get { return _shieldImage; }
-			set { _shieldImage = value; this.SendProp(Properties.SHIELDPOWER); }
+			set
+			{
+				_shieldImage = value;
+				this.SendProp(Properties.SHIELDPOWER);
+			}
 		}
 
 		public virtual int ShieldPower
 		{
 			get { return _shieldPower; }
-			set { _shieldPower = value; this.SendProp(Properties.SHIELDPOWER); }
+			set
+			{
+				_shieldPower = value;
+				this.SendProp(Properties.SHIELDPOWER);
+			}
 		}
 
 		public virtual string Sword
 		{
 			get { return _swordImage; }
-			set { _swordImage = value; this.SendProp(Properties.SWORDPOWER); }
+			set
+			{
+				_swordImage = value;
+				this.SendProp(Properties.SWORDPOWER);
+			}
 		}
 
 		public virtual string SwordImage
 		{
 			get { return _swordImage; }
-			set { _swordImage = value; this.SendProp(Properties.SWORDPOWER); }
+			set
+			{
+				_swordImage = value;
+				this.SendProp(Properties.SWORDPOWER);
+			}
 		}
 
 		public virtual int SwordPower
 		{
 			get { return _swordPower; }
-			set { _swordPower = value; this.SendProp(Properties.SWORDPOWER); }
+			set
+			{
+				_swordPower = value;
+				this.SendProp(Properties.SWORDPOWER);
+			}
 		}
 
 		public virtual bool WeaponsEnabled
@@ -1087,13 +1255,21 @@ namespace OpenGraal.Common.Players
 		public virtual double X
 		{
 			get { return _pixelX / 16; }
-			set { _pixelX = Convert.ToInt32(value * 16.0); this.SendProp(Properties.PIXELX); }
+			set
+			{
+				_pixelX = Convert.ToInt32(value * 16.0);
+				this.SendProp(Properties.PIXELX);
+			}
 		}
 
 		public virtual double Y
 		{
 			get { return _pixelY / 16; }
-			set { _pixelY = Convert.ToInt32(value * 16.0); this.SendProp(Properties.PIXELY); }
+			set
+			{
+				_pixelY = Convert.ToInt32(value * 16.0);
+				this.SendProp(Properties.PIXELY);
+			}
 		}
 
 		public virtual bool isLocalPlayer
@@ -1113,6 +1289,8 @@ namespace OpenGraal.Common.Players
 			get { return this._onlineTime; }
 			set { this._onlineTime = value; }
 		}
+
 		#endregion
+
 	}
 }

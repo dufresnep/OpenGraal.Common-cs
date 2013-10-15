@@ -11,7 +11,9 @@ namespace OpenGraal.Common.Levels
 {
 	public class GraalLevel
 	{
+
 		#region Member Variables
+
 		/// <summary>
 		/// Member Variables
 		/// </summary>
@@ -27,12 +29,17 @@ namespace OpenGraal.Common.Levels
 		public CString base64 = new CString() + "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 		public GraalLevelTile[] Tiles = new GraalLevelTile[4096];
 		public Dictionary<int, GraalLevelTileList> layers = new Dictionary<int, GraalLevelTileList>();
+
 		public bool isOnMap { get; set; }
+
 		public int MapPositionX { get; set; }
+
 		public int MapPositionY { get; set; }
+
 		#endregion
 
 		#region	Constructor /  Destructor
+
 		/// <summary>
 		/// Constructor
 		/// </summary>
@@ -41,15 +48,25 @@ namespace OpenGraal.Common.Levels
 			this.Name = LevelName;
 			this.TimerLock = TimerLock;
 			this.FlagManager = new FlagManager(null);
+			this.layers[0] = new GraalLevelTileList();
+			this.Load("template.nw");
+			/*
+			for (int i = 0; i < 64 * 2; i += 2)
+			{
+				int tile_index = 0;
+				
+			}*/
 		}
 
 		~GraalLevel()
 		{
 			this.Clear();
 		}
+
 		#endregion
 
 		#region Public functions
+
 		/// <summary>
 		/// Clear Level (test)
 		/// </summary>
@@ -182,9 +199,17 @@ namespace OpenGraal.Common.Levels
 		/// </summary>
 		public bool isOnWall(double x, double y)
 		{
+			Console.WriteLine("Testing tile x: " + x.ToString() + " - y: " + y.ToString());
+			x = Math.Round(x);
+			y = Math.Round(y);
+			Console.WriteLine("Testing tile2 x: " + x.ToString() + " - y: " + y.ToString());
 			if (x < 0 || x >= 64 || y < 0 || y >= 64)
 				return true;
-			return IsTileWall(Tiles[(int)x + ((int)y) * 64].TileId);
+			bool onwall;
+
+			onwall = IsTileWall(this.layers[0].FindTile(int.Parse(x.ToString()), int.Parse(y.ToString())));
+			return onwall;
+		
 		}
 
 		/// <summary>
@@ -194,7 +219,8 @@ namespace OpenGraal.Common.Levels
 		{
 			if (x < 0 || x >= 64 || y < 0 || y >= 64)
 				return false;
-			return IsTileWater(Tiles[(int)x + ((int)y) * 64].TileId);
+
+			return IsTileWater(this.layers[0].FindTile((int)x + ((int)y) * 64).TileId);
 		}
 
 		/// <summary>
@@ -205,11 +231,26 @@ namespace OpenGraal.Common.Levels
 			int TileX = TileId % 16;
 			int TileY = TileId / 16;
 			return (TileId == 32) || // black tile
-				((TileX >= 2 && TileY >= 26 && TileY < 28) || // lift objects
-				(TileY >= 30 && TileY < 48) || // chest, movestone, jumpstone, throughthrough
-				(TileY >= 84 && TileY < 96) || // lower 12 lines of foreground
-				(TileY >= 116 && TileY < 128) || // lower 12 lines of foreground
-				(TileY >= 128 && ((TileY / 16) & 1) != 0)); // lower half of normal tiles
+			((TileX >= 2 && TileY >= 26 && TileY < 28) || // lift objects
+			(TileY >= 30 && TileY < 48) || // chest, movestone, jumpstone, throughthrough
+			(TileY >= 84 && TileY < 96) || // lower 12 lines of foreground
+			(TileY >= 116 && TileY < 128) || // lower 12 lines of foreground
+			(TileY >= 128 && ((TileY / 16) & 1) != 0)); // lower half of normal tiles
+		}
+
+		/// <summary>
+		/// Check if a tile is blocking
+		/// </summary>
+		public bool IsTileWall(GraalLevelTile Tile)
+		{
+			int TileX = Tile.Tilex;
+			int TileY = Tile.Tiley;
+			return (Tile.TileId == 32) || // black tile
+			((TileX >= 2 && TileY >= 26 && TileY < 28) || // lift objects
+			(TileY >= 30 && TileY < 48) || // chest, movestone, jumpstone, throughthrough
+			(TileY >= 84 && TileY < 96) || // lower 12 lines of foreground
+			(TileY >= 116 && TileY < 128) || // lower 12 lines of foreground
+			(TileY >= 128 && ((TileY / 16) & 1) != 0)); // lower half of normal tiles
 		}
 
 		/// <summary>
@@ -229,7 +270,6 @@ namespace OpenGraal.Common.Levels
 			if (npc != null)
 				npc.Call(Event, Params);
 		}
-
 		/*
 		 * Thanks to the Gonstruct source for some help with the Load and Save functions!
 		 */
@@ -252,29 +292,39 @@ namespace OpenGraal.Common.Levels
 
 			// Determine the level type.
 			int v = -1;
-			if (fileVersion == "GLEVNW01") v = 0;
-			else if (fileVersion == "GR-V1.03" || fileVersion == "GR-V1.02" || fileVersion == "GR-V1.01") v = 1;
-			else if (fileVersion == "Z3-V1.04" || fileVersion == "Z3-V1.03") v = 2;
+			if (fileVersion == "GLEVNW01")
+				v = 0;
+			else if (fileVersion == "GR-V1.03" || fileVersion == "GR-V1.02" || fileVersion == "GR-V1.01")
+				v = 1;
+			else if (fileVersion == "Z3-V1.04" || fileVersion == "Z3-V1.03")
+				v = 2;
 
 			// Not a level.
-			if (v == -1) return false;
+			if (v == -1)
+				return false;
 
 			// Load the correct level.
-			if (v == 0) return this.LoadNW(levelData);
-			if (v == 1) return this.LoadGraal(levelData.Join("\n"), fileVersion);
-			if (v == 2) return this.LoadZelda(levelData.Join("\n"), fileVersion);
+			if (v == 0)
+				return this.LoadNW(levelData);
+			if (v == 1)
+				return this.LoadGraal(levelData.Join("\n"), fileVersion);
+			if (v == 2)
+				return this.LoadZelda(levelData.Join("\n"), fileVersion);
 			return false;
 
 		}
 
 		#region LoadGraal
+
 		private bool LoadGraal(CString levelData, string fileVersion)
 		{
 			return false;
 		}
+
 		#endregion
 
 		#region LoadZelda
+
 		private bool LoadZelda(CString levelData, string fileVersion)
 		{
 			// Get the appropriate filesystem.
@@ -293,9 +343,12 @@ namespace OpenGraal.Common.Levels
 				return this.LoadGraal(levelData, fileVersion);
 
 			int v = -1;
-			if (fileVersion == "Z3-V1.03") v = 3;
-			else if (fileVersion == "Z3-V1.04") v = 4;
-			if (v == -1) return false;
+			if (fileVersion == "Z3-V1.03")
+				v = 3;
+			else if (fileVersion == "Z3-V1.04")
+				v = 4;
+			if (v == -1)
+				return false;
 
 			#region Load tiles.
 			bool layerExists = false;
@@ -317,7 +370,7 @@ namespace OpenGraal.Common.Levels
 				bool doubleMode = false;
 
 				// Read the tiles.
-				while (boardIndex < 64*64 && levelData.BytesLeft != 0)
+				while (boardIndex < 64 * 64 && levelData.BytesLeft != 0)
 				{
 					// Every control code/tile is either 12 or 13 bits.  WTF.
 					// Read in the bits.
@@ -340,7 +393,8 @@ namespace OpenGraal.Common.Levels
 						
 						// If the 0x100 bit is set, we are in a double repeat mode.
 						// {double 4}56 = 56565656
-						if ((code & 0x100) != 0) doubleMode = true;
+						if ((code & 0x100) != 0)
+							doubleMode = true;
 
 						// How many tiles do we count?
 						count = (int)(code & 0xFF);
@@ -398,7 +452,8 @@ namespace OpenGraal.Common.Levels
 				while (levelData.BytesLeft != 0)
 				{
 					CString line = levelData.ReadString('\n');
-					if (line.Length == 0 || line.Text == "#") break;
+					if (line.Length == 0 || line.Text == "#")
+						break;
 
 					// Assemble the level string.
 
@@ -460,22 +515,25 @@ namespace OpenGraal.Common.Levels
 				while (levelData.BytesLeft != 0)
 				{
 					CString line = levelData.ReadString('\n');
-					if (line.Length == 0) break;
+					if (line.Length == 0)
+						break;
 
 					byte x = line.ReadGUByte1();
 					byte y = line.ReadGUByte1();
 					CString text = line.ReadString();
 
-					this.SignList.Add(this.SignList.Count+1, new GraalLevelSign(x, y, text.Text));
+					this.SignList.Add(this.SignList.Count + 1, new GraalLevelSign(x, y, text.Text));
 				}
 			}
 			#endregion
 
 			return true;
 		}
+
 		#endregion
 
 		#region LoadNW
+
 		private bool LoadNW(CStringList levelData)
 		{
 			bool isNpcCodeLine = false, isSignCodeLine = false;
@@ -524,8 +582,7 @@ namespace OpenGraal.Common.Levels
 						GraalLevelTile tile = this.layers[layer].AddTile(x, start_y, width, tile_index);
 					}
 					#endregion
-				}
-				else if (type == "LINK")
+				} else if (type == "LINK")
 				{
 					#region LINK code
 					GraalLevelLink link = new GraalLevelLink();
@@ -546,8 +603,7 @@ namespace OpenGraal.Common.Levels
 
 					this.LinkList.Add(this.LinkList.Count + 1, link);
 					#endregion
-				}
-				else if (type == "SIGN" || isSignCodeLine) // read npcs
+				} else if (type == "SIGN" || isSignCodeLine) // read npcs
 				{
 					#region SIGN code
 					if (isSignCodeLine)
@@ -555,8 +611,7 @@ namespace OpenGraal.Common.Levels
 						if (type == "SIGNEND")
 						{
 							isSignCodeLine = false;
-						}
-						else
+						} else
 						{
 							GraalLevelSign sign = this.SignList[this.SignList.Count];
 							sign.Text += lvlDat.Text;
@@ -564,8 +619,7 @@ namespace OpenGraal.Common.Levels
 
 							this.SignList[this.SignList.Count] = sign;
 						}
-					}
-					else
+					} else
 					{
 						GraalLevelSign sign = new GraalLevelSign();
 						int signX, signY, width, layer;
@@ -579,8 +633,7 @@ namespace OpenGraal.Common.Levels
 						this.SignList.Add(this.SignList.Count + 1, sign);
 					}
 					#endregion
-				}
-				else if (type == "NPC" || isNpcCodeLine) // read npcs
+				} else if (type == "NPC" || isNpcCodeLine) // read npcs
 				{
 					#region NPC code
 					isNpcCodeLine = this.AddNPC(isNpcCodeLine, lvlDat, words, type);
@@ -598,8 +651,7 @@ namespace OpenGraal.Common.Levels
 				if (type == "NPCEND")
 				{
 					isNpcCodeLine = false;
-				}
-				else
+				} else
 				{
 					GraalLevelNPC npc = this.NpcList[this.NpcList.Count];
 					npc.Script += lvlDat.Text;
@@ -607,8 +659,7 @@ namespace OpenGraal.Common.Levels
 
 					this.NpcList[this.NpcList.Count] = npc;
 				}
-			}
-			else
+			} else
 			{
 				GraalLevelNPC npc = new GraalLevelNPC(this, this.NpcList.Count + 1);
 				npc.Image = words.Get(1).Text;
@@ -629,6 +680,7 @@ namespace OpenGraal.Common.Levels
 			}
 			return isNpcCodeLine;
 		}
+
 		#endregion
 
 		public void Save(CString pFileName)
@@ -684,7 +736,8 @@ namespace OpenGraal.Common.Levels
 					if (data != "")
 					{
 						Dictionary<int, string> chunk = new Dictionary<int, string>();
-						chunk.Add(current_start, data); ;
+						chunk.Add(current_start, data);
+						;
 						chunks.Add(chunk);
 					}
 
@@ -702,7 +755,7 @@ namespace OpenGraal.Common.Levels
 			#endregion
 
 			#region LINK code
-			foreach (KeyValuePair<int,GraalLevelLink> link in this.LinkList) 
+			foreach (KeyValuePair<int,GraalLevelLink> link in this.LinkList)
 			{
 				stream += "LINK" + s + link.Value.Destination + s + link.Value.X + s + link.Value.Y
 				+ s + link.Value.Width + s + link.Value.Height + s + link.Value.NewX
@@ -711,7 +764,7 @@ namespace OpenGraal.Common.Levels
 			#endregion
 
 			#region SIGN code
-			foreach(KeyValuePair<int,GraalLevelSign> sign in this.SignList)
+			foreach (KeyValuePair<int,GraalLevelSign> sign in this.SignList)
 			{
 				stream += "SIGN" + s + sign.Value.X + s + sign.Value.Y + "\n";
 				stream += sign.Value.Text + "\n";
@@ -743,6 +796,7 @@ namespace OpenGraal.Common.Levels
 
 		static string NW_LEVEL_VERSION = "GLEVNW01";
 		static string BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
 		public int Base64Decode(string str)
 		{
 			int num = 0;
@@ -778,9 +832,11 @@ namespace OpenGraal.Common.Levels
 		{
 			
 		}
+
 		#endregion
 
 		#region	Get-Value Functions
+
 		/// <summary>
 		/// Grab Local NPCS
 		/// </summary>
@@ -829,6 +885,8 @@ namespace OpenGraal.Common.Levels
 		{
 			get { return this.Name; }
 		}
+
 		#endregion
+
 	}
 }
