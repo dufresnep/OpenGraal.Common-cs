@@ -38,6 +38,25 @@ namespace OpenGraal.Common.Levels
 
 		#endregion
 
+		enum TileType
+		{
+			TILE_TYPE_NONBLOCK = 0,
+			TILE_TYPE_HURT_UNDERGROUND = 2,
+			TILE_TYPE_CHAIR = 3,
+			TILE_TYPE_BED_UPPER = 4,
+			TILE_TYPE_BED_LOWER = 5,
+			TILE_TYPE_SWAMP = 6,
+			TILE_TYPE_LAVA_SWAMP = 7,
+			TILE_TYPE_NEAR_WATER = 8,
+			TILE_TYPE_WATER = 11,
+			TILE_TYPE_LAVA = 12,
+			TILE_TYPE_THROW_THROUGH = 20,
+			TILE_TYPE_JUMP_STONE = 21,
+			TILE_TYPE_BLOCKING = 22}
+		;
+
+		Dictionary<int,int> TileTypeDefinitions = new Dictionary<int, int>();
+
 		#region	Constructor /  Destructor
 
 		/// <summary>
@@ -49,13 +68,13 @@ namespace OpenGraal.Common.Levels
 			this.TimerLock = TimerLock;
 			this.FlagManager = new FlagManager(null);
 			this.layers[0] = new GraalLevelTileList();
-			this.Load("template.nw");
-			/*
-			for (int i = 0; i < 64 * 2; i += 2)
+
+			for (int i = 0; i < 4096; i++)
 			{
-				int tile_index = 0;
-				
-			}*/
+				this.layers[0].AddTile(i, 632);
+			}
+
+			this.LoadTypeDefinitions(new CString() + "tiletypes1.dat");
 		}
 
 		~GraalLevel()
@@ -92,6 +111,7 @@ namespace OpenGraal.Common.Levels
 			if (!Players.Contains(Player))
 			{
 				Players.Add(Player);
+				Player.Level = this;
 				this.CallNPCs("onPlayerEnters", new object[] { Player });
 				Player.CallNPCs("onPlayerEnters", new object[] { Player });
 			}
@@ -199,17 +219,21 @@ namespace OpenGraal.Common.Levels
 		/// </summary>
 		public bool isOnWall(double x, double y)
 		{
-			Console.WriteLine("Testing tile x: " + x.ToString() + " - y: " + y.ToString());
-			x = Math.Round(x);
-			y = Math.Round(y);
-			Console.WriteLine("Testing tile2 x: " + x.ToString() + " - y: " + y.ToString());
 			if (x < 0 || x >= 64 || y < 0 || y >= 64)
 				return true;
-			bool onwall;
 
-			onwall = IsTileWall(this.layers[0].FindTile(int.Parse(x.ToString()), int.Parse(y.ToString())));
-			return onwall;
-		
+			int tileId = this.layers[0].FindTile((int)x + ((int)y) * 64).TileId;
+
+			//Console.WriteLine("Testing tile2 x: " + x.ToString() + " - y: " + y.ToString() + " - TileId: " + tileId.ToString() + " - Type: " + Enum.GetName(typeof(TileType), this.TileTypeDefinitions[tileId]));
+			if (this.TileTypeDefinitions[tileId] == (int)TileType.TILE_TYPE_BLOCKING)
+				return true;
+			else if (this.TileTypeDefinitions[tileId] == (int)TileType.TILE_TYPE_JUMP_STONE)
+				return true;
+			else if (this.TileTypeDefinitions[tileId] == (int)TileType.TILE_TYPE_THROW_THROUGH)
+				return true;
+			else
+				return false;
+
 		}
 
 		/// <summary>
@@ -220,7 +244,12 @@ namespace OpenGraal.Common.Levels
 			if (x < 0 || x >= 64 || y < 0 || y >= 64)
 				return false;
 
-			return IsTileWater(this.layers[0].FindTile((int)x + ((int)y) * 64).TileId);
+			int tileId = this.layers[0].FindTile((int)x + ((int)y) * 64).TileId;
+
+			if (this.TileTypeDefinitions[tileId] == (int)TileType.TILE_TYPE_WATER)
+				return true;
+			else
+				return false;
 		}
 
 		/// <summary>
@@ -228,29 +257,20 @@ namespace OpenGraal.Common.Levels
 		/// </summary>
 		public bool IsTileWall(int TileId)
 		{
+
+
 			int TileX = TileId % 16;
 			int TileY = TileId / 16;
+			Console.WriteLine("TileX: " + TileX.ToString() + " - TileY: " + TileY.ToString() + " - TileId: " + TileId.ToString());
+			return (TileId >= 4 && TileId <= 7) || (TileId >= 9 && TileId <= 14) || (TileId >= 20 && TileId <= 23);
+			/*
 			return (TileId == 32) || // black tile
 			((TileX >= 2 && TileY >= 26 && TileY < 28) || // lift objects
 			(TileY >= 30 && TileY < 48) || // chest, movestone, jumpstone, throughthrough
 			(TileY >= 84 && TileY < 96) || // lower 12 lines of foreground
 			(TileY >= 116 && TileY < 128) || // lower 12 lines of foreground
 			(TileY >= 128 && ((TileY / 16) & 1) != 0)); // lower half of normal tiles
-		}
-
-		/// <summary>
-		/// Check if a tile is blocking
-		/// </summary>
-		public bool IsTileWall(GraalLevelTile Tile)
-		{
-			int TileX = Tile.Tilex;
-			int TileY = Tile.Tiley;
-			return (Tile.TileId == 32) || // black tile
-			((TileX >= 2 && TileY >= 26 && TileY < 28) || // lift objects
-			(TileY >= 30 && TileY < 48) || // chest, movestone, jumpstone, throughthrough
-			(TileY >= 84 && TileY < 96) || // lower 12 lines of foreground
-			(TileY >= 116 && TileY < 128) || // lower 12 lines of foreground
-			(TileY >= 128 && ((TileY / 16) & 1) != 0)); // lower half of normal tiles
+			*/
 		}
 
 		/// <summary>
@@ -276,6 +296,26 @@ namespace OpenGraal.Common.Levels
 		public bool Load(string pFileName)
 		{
 			return this.Load(new CString() + pFileName);
+		}
+
+		public bool LoadTypeDefinitions(CString pFileName)
+		{
+			CStringList typeDefs = new CStringList();
+			if (!typeDefs.Load(pFileName.Text))
+				return false;
+
+			if (typeDefs.Count < 1)
+				return false;
+
+			foreach (CString typeDefLine in typeDefs)
+			{
+				for (var i = 0; i < typeDefLine.Text.Length; i++)
+				{
+					//Console.WriteLine("TileId: " + i.ToString() + " - TileType: " + Enum.GetName(typeof(TileType), typeDefLine.ReadByte()).ToString());
+					this.TileTypeDefinitions.Add(i, typeDefLine.ReadByte());
+				}
+			}
+			return true;
 		}
 
 		public bool Load(CString pFileName)
@@ -479,9 +519,9 @@ namespace OpenGraal.Common.Levels
 			{
 				while (levelData.BytesLeft != 0)
 				{
-					byte x = levelData.ReadGUByte1();
-					byte y = levelData.ReadGUByte1();
-					byte type = levelData.ReadGUByte1();
+					int x = levelData.ReadGUByte1();
+					int y = levelData.ReadGUByte1();
+					int type = levelData.ReadGUByte1();
 
 					// Ends with an invalid baddy.
 					if (x == -1 && y == -1 && type == -1)
@@ -586,7 +626,7 @@ namespace OpenGraal.Common.Levels
 				{
 					#region LINK code
 					GraalLevelLink link = new GraalLevelLink();
-					int linkX, linkY, width, height, newX, newY;
+					int linkX, linkY, width, height;
 					link.Destination = words.Get(1).Text;
 					int.TryParse(words.Get(2).Text, out linkX);
 					int.TryParse(words.Get(3).Text, out linkY);
@@ -622,7 +662,7 @@ namespace OpenGraal.Common.Levels
 					} else
 					{
 						GraalLevelSign sign = new GraalLevelSign();
-						int signX, signY, width, layer;
+						int signX, signY;
 						int.TryParse(words.Get(1).Text, out signX);
 						int.TryParse(words.Get(2).Text, out signY);
 						sign.X = signX;

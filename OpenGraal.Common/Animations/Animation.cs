@@ -3,10 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Collections;
 using System.IO;
 using System.Text.RegularExpressions;
-
 using OpenGraal;
 using OpenGraal.Core;
 using OpenGraal.Common;
@@ -17,15 +15,14 @@ namespace OpenGraal.Common.Animations
 {
 	public class Animation
 	{
+
 		#region Member Variables
+
 		public bool loaded;
 		public CString name, real;
 		private bool _isLoop, _isContinuous, _isSingleDir = false;
 		private CString _setBackTo;
-
 		private int _max;
-
-
 		private List<int> _waits = new List<int>();
 		private List<Frame> _frames = new List<Frame>();
 		private List<Sprite> _spriteList = new List<Sprite>();
@@ -33,6 +30,7 @@ namespace OpenGraal.Common.Animations
 		#endregion
 
 		#region Get/set value functions
+
 		public List<Sprite> SpriteList
 		{
 			get
@@ -128,9 +126,11 @@ namespace OpenGraal.Common.Animations
 				this._max = value;
 			}
 		}
+
 		#endregion
 
 		#region Constructor / Destructor
+
 		public Animation()
 		{
 			
@@ -141,9 +141,11 @@ namespace OpenGraal.Common.Animations
 			_spriteList.Clear();
 			_frames.Clear();
 		}
+
 		#endregion
 
 		#region Public functions
+
 		public static String nextLine(Stack<string> lines)
 		{
 			if (lines.Count > 0)
@@ -153,8 +155,7 @@ namespace OpenGraal.Common.Animations
 				line.Replace("\r", "");
 
 				return line;
-			}
-			else
+			} else
 			{
 				return "";
 			}
@@ -164,7 +165,8 @@ namespace OpenGraal.Common.Animations
 		{
 			foreach (Sprite s in _spriteList)
 			{
-				if (s.SpriteId == id) return s;
+				if (s.SpriteId == id)
+					return s;
 			}
 
 			return null;
@@ -298,14 +300,12 @@ namespace OpenGraal.Common.Animations
 									if (line == "ANIEND")
 									{
 										break;
-									}
-									else if (line.Length == 0 || line == "\n" || line == "\r" || !IsNumeric(toks[0]))
+									} else if (line.Length == 0 || line == "\n" || line == "\r" || !IsNumeric(toks[0]))
 									{
 										line = nextLine(lines);
 										line = line.Trim();
 										line = Regex.Replace(line, @"[ ]{2,}", @" ");
-									}
-									else
+									} else
 									{
 										break;
 									}
@@ -336,8 +336,6 @@ namespace OpenGraal.Common.Animations
 			return (isAbsolutePath(p)) ? p : top + "/" + p;
 		}
 
-		
-
 		public virtual void Draw(int x, int y, int dir, object targetWindow, bool dontIncrement = false)
 		{
 			// OVERRIDE THIS
@@ -363,15 +361,15 @@ namespace OpenGraal.Common.Animations
 				else
 					Double.Parse(Expression.ToString());
 				return true;
-			}
-
-			catch
+			} catch
 			{ // just dismiss errors but return false
 				return false;
 			}
 
-			return false;
+
 		}
+
 		#endregion
+
 	}
 }

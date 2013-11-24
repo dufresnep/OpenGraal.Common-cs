@@ -18,6 +18,7 @@ namespace OpenGraal.Common.Scripting
 		public List<ScriptEvent> ScriptEvents = new List<ScriptEvent>();
 		private  CSocket Server;
 		private Dictionary<String, ServerWeapon> _weaponList;
+
 		public Dictionary<String, ServerWeapon> WeaponList
 		{
 			get
@@ -29,8 +30,10 @@ namespace OpenGraal.Common.Scripting
 				_weaponList = value;
 			}
 		}
+
 		public double timeout = 0.0;
 		private int _nwTime = 0;
+
 		public int NWTime
 		{
 			get
@@ -42,7 +45,9 @@ namespace OpenGraal.Common.Scripting
 				_nwTime = value;
 			}
 		}
+
 		private GraalPlayerList _playerManager = null;
+
 		public GraalPlayerList PlayerManager
 		{
 			get
@@ -58,11 +63,21 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Constructor
 		/// </summary>
-		public ScriptObj(){}
-		public ScriptObj(CSocket Server) { this.Server = Server; }
-		public ScriptObj(GraalPlayerList PL, int NWTime) 
+		public ScriptObj()
+		{
+		}
+
+		public ScriptObj(CSocket Server)
+		{
+			this.Server = Server;
+		}
+
+		public ScriptObj(GraalPlayerList PL, int NWTime)
 		{
 			this.PlayerManager = PL;
+
+
+
 			this.NWTime = NWTime;
 		}
 
@@ -77,8 +92,9 @@ namespace OpenGraal.Common.Scripting
 				MethodInfo m = type.GetMethod(Event);
 				if (m != null)
 					type.InvokeMember(Event, BindingFlags.InvokeMethod, null, this, Args);
+			} catch (Exception)
+			{
 			}
-			catch (Exception) { }
 		}
 
 		/// <summary>
@@ -120,7 +136,7 @@ namespace OpenGraal.Common.Scripting
 		{
 			ServerWeapon wep;
 			if (this.WeaponList.TryGetValue(Name, out wep))
-			return (dynamic)wep.ScriptObject;
+				return (dynamic)wep.ScriptObject;
 			return null;
 		}
 
