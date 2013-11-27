@@ -74,7 +74,8 @@ namespace OpenGraal.Common.Levels
 				this.layers[0].AddTile(i, 632);
 			}
 
-			this.LoadTypeDefinitions(new CString() + "tiletypes1.dat");
+			if (System.IO.File.Exists("tiletypes1.dat"))
+				this.LoadTypeDefinitions(new CString() + "tiletypes1.dat");
 		}
 
 		~GraalLevel()
