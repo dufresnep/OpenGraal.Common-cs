@@ -348,6 +348,282 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Set Properties
 		/// </summary>
+		public static Dictionary<int, dynamic> ParseProps(CString Packet)
+		{
+			Dictionary<int, dynamic> testProps = new Dictionary<int,dynamic>();
+
+			while (Packet.BytesLeft > 0)
+			{
+				Int32 PropId = Packet.ReadGUByte1();
+
+				switch ((Properties)PropId)
+				{
+					case Properties.NICKNAME: // 0
+					case Properties.ANIMATION: // 10
+					case Properties.CURCHAT: // 12
+					case Properties.CURLEVEL: // 20
+					case Properties.HORSEIMG: // 21
+					case Properties.GATTRIB1: // 37
+					case Properties.GATTRIB2: // 38
+					case Properties.GATTRIB3: // 39
+					case Properties.GATTRIB4: // 40
+					case Properties.GATTRIB5: // 41
+					case Properties.ACCOUNTNAME: // 34
+					case Properties.BODYIMAGE: // 35
+					case Properties.GATTRIB6: // 46
+					case Properties.GATTRIB7: // 47
+					case Properties.GATTRIB8: // 48
+					case Properties.GATTRIB9: // 49
+					case Properties.LANGUAGE: // 52
+					case Properties.GATTRIB10: // 54
+					case Properties.GATTRIB11: // 55
+					case Properties.GATTRIB12: // 56
+					case Properties.GATTRIB13: // 57
+					case Properties.GATTRIB14: // 58
+					case Properties.GATTRIB15: // 59
+					case Properties.GATTRIB16: // 60
+					case Properties.GATTRIB17: // 61
+					case Properties.GATTRIB18: // 62
+					case Properties.GATTRIB19: // 63
+					case Properties.GATTRIB20: // 64
+					case Properties.GATTRIB21: // 65
+					case Properties.GATTRIB22: // 66
+					case Properties.GATTRIB23: // 67
+					case Properties.GATTRIB24: // 68
+					case Properties.GATTRIB25: // 69
+					case Properties.GATTRIB26: // 70
+					case Properties.GATTRIB27: // 71
+					case Properties.GATTRIB28: // 72
+					case Properties.GATTRIB29: // 73
+					case Properties.GATTRIB30: // 74
+					case Properties.OSTYPE: // 75
+					case Properties.COMMUNITY: // 82
+						testProps.Add(PropId, Packet.ReadChars(Packet.ReadGUByte1()));
+						break;
+
+					case Properties.CURPOWER: // 2
+						testProps.Add(PropId, (double)Packet.ReadGUByte1() / 2);
+						break;
+
+					case Properties.RUPEESCOUNT: // 3
+						testProps.Add(PropId, (int)Packet.ReadGUByte3());
+						break;
+
+					case Properties.MAXPOWER: // 1
+					case Properties.ARROWSCOUNT: // 4
+					case Properties.BOMBSCOUNT: // 5
+					case Properties.GLOVEPOWER: // 6
+					case Properties.BOMBPOWER: // 7
+					case Properties.PLAYERX: // 15 - obsolete
+					case Properties.PLAYERY: // 16 - obsolete
+					case Properties.PLSTATUS: // 18
+					case Properties.CARRYSPRITE: // 19
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.SWORDPOWER: // 8
+						{
+							Int32 sp = Packet.ReadGUByte1();
+							string swordimage = "";
+							if (sp > 4)
+							{
+								sp -= 30;
+								Int32 len = Packet.ReadGUByte1();
+								if (len > 0)
+									swordimage = Packet.ReadChars(len);
+							}
+							else
+								swordimage = "sword" + sp + ".png";
+
+							//this._swordPower = sp;
+							testProps.Add(PropId, sp.ToString() + swordimage);
+							break;
+						}
+
+					case Properties.SHIELDPOWER: // 9
+						{
+							Int32 sp = Packet.ReadGUByte1();
+							string shieldimage = "";
+							if (sp > 3)
+							{
+								sp -= 10;
+								if (sp < 0)
+									break;
+								Int32 len = Packet.ReadGUByte1();
+								if (len > 0)
+									shieldimage = Packet.ReadChars(len);
+							}
+							else
+								shieldimage = "shield" + sp + ".png";
+
+							testProps.Add(PropId, sp.ToString() + shieldimage);
+							break;
+						}
+
+					case Properties.HEADIMAGE: // 11
+						{
+							Int32 len = Packet.ReadGUByte1();
+							string headimage = (len < 100 ? "head" + len + ".png" : Packet.ReadChars(len - 100));
+							testProps.Add(PropId, headimage);
+							break;
+						}
+
+					case Properties.PLCOLORS: // 13
+						Dictionary<int, int> colors = new Dictionary<int, int>();
+						for (int i = 0; i < 5; i++)
+							colors.Add(i,Packet.ReadGUByte1());
+
+						testProps.Add(PropId, colors);
+						break;
+
+					case Properties.PLAYERID: // 14
+						testProps.Add(PropId, Packet.ReadGUByte2());
+						break;
+
+
+					case Properties.PLSPRITE: // 17
+						int dir = Packet.ReadGUByte1() % 4;
+						testProps.Add(PropId, dir);
+						break;
+
+					case Properties.HORSEBUSHES: // 22
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.EFFECTCOLOR: // 23
+						{
+							int len = Packet.ReadGUByte1();
+							if (len > 0)
+								testProps.Add(PropId, Packet.ReadGUByte4());
+							break;
+						}
+
+					case Properties.CARRYNPC: // 24
+						testProps.Add(PropId, Packet.ReadGUByte3());
+						break;
+
+					case Properties.APCOUNTER: // 25
+						testProps.Add(PropId, Packet.ReadGUByte2());
+						break;
+
+					case Properties.MAGICPOINTS: // 26
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.KILLSCOUNT: // 27
+						testProps.Add(PropId, Packet.ReadGByte3());
+						break;
+
+					case Properties.DEATHSCOUNT: // 28
+						testProps.Add(PropId, Packet.ReadGByte3());
+						break;
+
+					case Properties.ONLINESECS: // 29
+						testProps.Add(PropId, Packet.ReadGByte3());
+						break;
+
+					case Properties.IPADDRESS: // 30
+						testProps.Add(PropId, new System.Net.IPAddress(Packet.ReadGUByte5()).ToString());
+						break;
+
+					case Properties.UDPPORT: // 31
+						testProps.Add(PropId, Packet.ReadGByte3());
+						break;
+
+					case Properties.ALIGNMENT: // 32
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.ADDITFLAGS: // 33
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+
+
+					case Properties.PLRATING: // 36
+						testProps.Add(PropId, Packet.ReadGUByte3());
+						break;
+
+
+					case Properties.PLATTACHNPC: // 42
+						testProps.Add(PropId, Packet.ReadGUByte4());
+						break;
+
+					case Properties.GMAPLEVELX: // 43
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.GMAPLEVELY: // 44
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.PLAYERZ: // 45
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+
+					case Properties.JOINLEAVELV: // 50
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.CONNECTED: // 51
+						testProps.Add(PropId, true);
+						break;
+
+					case Properties.STATUSMSG: // 53
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+
+					case Properties.TEXTCODEPG: // 76
+						testProps.Add(PropId, Packet.ReadGUByte3());
+						break;
+
+					case Properties.UNKNOWN77: // 77
+						testProps.Add(PropId, true);
+						break;
+
+					case Properties.PIXELX: // 78
+						{
+							int tmp = Packet.ReadGUByte2();
+
+							// If the first bit is 1, our position is negative.
+							tmp >>= 1;
+							if ((tmp & 0x0001) != 0)
+								tmp = -tmp;
+							testProps.Add(PropId, tmp);
+							break;
+						}
+
+					case Properties.PIXELY: // 79
+						{
+							int tmp = Packet.ReadGUByte2();
+
+							// If the first bit is 1, our position is negative.
+							tmp >>= 1;
+							if ((tmp & 0x0001) != 0)
+								tmp = -tmp;
+							testProps.Add(PropId, tmp);
+							break;
+						}
+
+					case Properties.PIXELZ: // 80
+						testProps.Add(PropId, Packet.ReadGUByte2());
+						break;
+
+					case Properties.UNKNOWN81: // 81
+						testProps.Add(PropId, true);
+						break;
+
+					default:
+						//System.Windows.Forms.MessageBox.Show("Invalid Prop: " + PropId);
+						break;
+				}
+			}
+
+			return testProps;
+		}
+
 		public virtual void SetProps(CString Packet)
 		{
 			bool moved = false;
