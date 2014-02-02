@@ -11,23 +11,24 @@
     <RootNamespace>OpenGraal.Common</RootNamespace>
     <AssemblyName>OpenGraal.Common</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <ReleaseVersion>0.0.0.1</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>True</DebugSymbols>
+    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>False</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>True</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -38,45 +39,41 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="MySql.Data">
-      <HintPath>..\Libraries\mysql.data.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\Libraries\mysql.data.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib, Version=0.85.4.369, Culture=neutral, PublicKeyToken=1b03e6acf1164f73">
-      <HintPath>..\..\..\opengraal.npcserver-cs\trunk\packages\ICSharpCode.SharpZipLib.dll.0.85.4.369\lib\net20\ICSharpCode.SharpZipLib.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.npcserver-cs\trunk\packages\ICSharpCode.SharpZipLib.dll.0.85.4.369\lib\net20\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Animations\Animation.cs" />
-    <Compile Include="Animations\Frame.cs" />
-    <Compile Include="Animations\Sprite.cs" />
-    <Compile Include="Levels\GraalLevelLink.cs" />
-    <Compile Include="Levels\GraalLevel.cs" />
-    <Compile Include="Levels\GraalLevelSign.cs" />
-    <Compile Include="Levels\GraalLevelTileList.cs" />
-    <Compile Include="Scripting\ExtensionMethods.cs" />
-    <Compile Include="Scripting\GameCompiler.cs" />
-    <Compile Include="Scripting\IRefObject.cs" />
-    <Compile Include="Levels\GraalLevelTile.cs" />
-    <Compile Include="Levels\GraalLevelNPC.cs" />
-    <Compile Include="Levels\GraalMap.cs" />
-    <Compile Include="Levels\GraalObject.cs" />
-    <Compile Include="Players\ColorManager.cs" />
-    <Compile Include="Players\FlagManager.cs" />
-    <Compile Include="Players\GraalPlayer.cs" />
-    <Compile Include="Players\GraalPlayerList.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Scripting\ScriptEvent.cs" />
-    <Compile Include="Scripting\ScriptObj.cs" />
-    <Compile Include="Scripting\ServerClass.cs" />
-    <Compile Include="Scripting\ServerWeapon.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Animations\Animation.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Animations\Frame.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Animations\Sprite.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Levels\GraalLevelLink.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Levels\GraalLevel.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Levels\GraalLevelSign.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Levels\GraalLevelTileList.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Scripting\ExtensionMethods.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Scripting\GameCompiler.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Scripting\IRefObject.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Levels\GraalLevelTile.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Levels\GraalLevelNPC.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Levels\GraalMap.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Levels\GraalObject.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Players\ColorManager.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Players\FlagManager.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Players\GraalPlayer.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Players\GraalPlayerList.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Properties\AssemblyInfo.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Scripting\ScriptEvent.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Scripting\ScriptObj.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Scripting\ServerClass.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Scripting\ServerWeapon.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Levels\TNPC.cs" />
+    <Compile Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\Animations\IGaniObj.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\opengraal.core-cs\trunk\OpenGraal.Core\OpenGraal.Core.csproj">
-      <Project>{CC4AF8B5-BECF-4562-A0E5-94FBE0FBAB8F}</Project>
-      <Name>OpenGraal.Core</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.common-cs\trunk\OpenGraal.Common\packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -86,4 +83,10 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\..\marlon%40eevul.org\graal\googlecodegserver\opengraal.core-cs\trunk\OpenGraal.Core\OpenGraal.Core.csproj">
+      <Project>{CC4AF8B5-BECF-4562-A0E5-94FBE0FBAB8F}</Project>
+      <Name>OpenGraal.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

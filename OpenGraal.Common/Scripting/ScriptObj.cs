@@ -14,9 +14,9 @@ namespace OpenGraal.Common.Scripting
 	public class ScriptObj
 	{
 		// -- Member Variables -- //
-		static public Random rand = new Random();
-		public List<ScriptEvent> ScriptEvents = new List<ScriptEvent>();
-		private  CSocket Server;
+		static public Random rand = new Random ();
+		public List<ScriptEvent> ScriptEvents = new List<ScriptEvent> ();
+		private  CSocket _server;
 		private Dictionary<String, ServerWeapon> _weaponList;
 
 		public Dictionary<String, ServerWeapon> WeaponList
@@ -29,6 +29,12 @@ namespace OpenGraal.Common.Scripting
 			{
 				_weaponList = value;
 			}
+		}
+
+		public CSocket Server
+		{
+			get { return _server;}
+			set { _server = value;}
 		}
 
 		public double timeout = 0.0;
@@ -63,16 +69,16 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Constructor
 		/// </summary>
-		public ScriptObj()
+		public ScriptObj ()
 		{
 		}
 
-		public ScriptObj(CSocket Server)
+		public ScriptObj (CSocket Server)
 		{
 			this.Server = Server;
 		}
 
-		public ScriptObj(GraalPlayerList PL, int NWTime)
+		public ScriptObj (GraalPlayerList PL, int NWTime)
 		{
 			this.PlayerManager = PL;
 
@@ -84,15 +90,16 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Function -> Call Event for Object
 		/// </summary>
-		public void Call(String Event, Object[] Args)
+		public void Call (String Event, Object[] Args)
 		{
-			Type type = this.GetType();
+			Type type = this.GetType ();
 			try
 			{
-				MethodInfo m = type.GetMethod(Event);
+				MethodInfo m = type.GetMethod (Event);
 				if (m != null)
-					type.InvokeMember(Event, BindingFlags.InvokeMethod, null, this, Args);
-			} catch (Exception)
+					type.InvokeMember (Event, BindingFlags.InvokeMethod, null, this, Args);
+			}
+			catch (Exception)
 			{
 			}
 		}
@@ -100,7 +107,7 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Function -> Run Scheduled Events
 		/// </summary>
-		public void RunEvents()
+		public void RunEvents ()
 		{
 		
 			// Run Timeout
@@ -108,22 +115,22 @@ namespace OpenGraal.Common.Scripting
 			{
 				this.timeout -= 0.05;
 				if (this.timeout <= 0.0)
-					this.Call("onTimeout", null);
+					this.Call ("onTimeout", null);
 				
 			}
 
 			// Run Scheduled Events
 			for (int i = ScriptEvents.Count - 1; i >= 0; i--)
 			{
-				ScriptEvent e = ScriptEvents[i];
+				ScriptEvent e = ScriptEvents [i];
 				if (e.FunctionTimer > 0.0)
 				{
 					e.FunctionTimer -= 0.05;
 					if (e.FunctionTimer <= 0.0)
 					{
-						Call(e.FunctionName, e.FunctionArgs);
-						Console.WriteLine(e.FunctionName + " " + e.FunctionArgs);
-						ScriptEvents.RemoveAt(i);
+						Call (e.FunctionName, e.FunctionArgs);
+						Console.WriteLine (e.FunctionName + " " + e.FunctionArgs);
+						ScriptEvents.RemoveAt (i);
 					}
 				}
 			}
@@ -132,10 +139,10 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Library Function -> FindWeapon by Name
 		/// </summary>
-		public dynamic FindWeapon(string Name)
+		public dynamic FindWeapon (string Name)
 		{
 			ServerWeapon wep;
-			if (this.WeaponList.TryGetValue(Name, out wep))
+			if (this.WeaponList.TryGetValue (Name, out wep))
 				return (dynamic)wep.ScriptObject;
 			return null;
 		}
@@ -143,44 +150,44 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Library Function -> Find Player by Account
 		/// </summary>
-		public GraalPlayer FindPlayer(string Account)
+		public GraalPlayer FindPlayer (string Account)
 		{
-			return this.PlayerManager.FindPlayer(Account);
+			return this.PlayerManager.FindPlayer (Account);
 		}
 
 		/// <summary>
 		/// Library Function -> Find Player by Id
 		/// </summary>
-		public GraalPlayer FindPlayer(short Id)
+		public GraalPlayer FindPlayer (short Id)
 		{
-			return this.PlayerManager.FindPlayer(Id);
+			return this.PlayerManager.FindPlayer (Id);
 		}
 
 		/// <summary>
 		/// Library Function -> MD5 String
 		/// </summary>
-		public String MD5(String Input)
+		public String MD5 (String Input)
 		{
-			System.Security.Cryptography.MD5CryptoServiceProvider x = new System.Security.Cryptography.MD5CryptoServiceProvider();
-			byte[] bs = x.ComputeHash(System.Text.Encoding.UTF8.GetBytes(Input));
+			System.Security.Cryptography.MD5CryptoServiceProvider x = new System.Security.Cryptography.MD5CryptoServiceProvider ();
+			byte[] bs = x.ComputeHash (System.Text.Encoding.UTF8.GetBytes (Input));
 			string ret = String.Empty;
 			foreach (byte b in bs)
-				ret += b.ToString("x2").ToLower();
+				ret += b.ToString ("x2").ToLower ();
 			return ret;
 		}
 
 		/// <summary>
 		/// Random (Integer)
 		/// </summary>
-		public double random(int min, int max)
+		public double random (int min, int max)
 		{
-			return min + rand.NextDouble() * (max - min);
+			return min + rand.NextDouble () * (max - min);
 		}
 
 		/// <summary>
 		/// Library Function -> Schedule Event
 		/// </summary>
-		public void ScheduleEvent(double Timer, String Name, params object[] Args)
+		public void ScheduleEvent (double Timer, String Name, params object[] Args)
 		{
 			bool isReplaced = false;
 			foreach (ScriptEvent e in ScriptEvents)
@@ -193,29 +200,29 @@ namespace OpenGraal.Common.Scripting
 			}
 
 			if (!isReplaced)
-				ScriptEvents.Add(new ScriptEvent(Timer, Name, Args));
+				ScriptEvents.Add (new ScriptEvent (Timer, Name, Args));
 		}
 
 		/// <summary>
 		/// Library Function -> Trigger Event
 		/// </summary>
-		public void trigger(string Event, params object[] Args)
+		public void trigger (string Event, params object[] Args)
 		{
-			this.Call(Event, Args);
+			this.Call (Event, Args);
 		}
 
 		/// <summary>
 		/// Library Function -> Trigger Event
 		/// </summary>
-		public void trigger(GraalPlayer player, string Event, string[] args)
+		public void trigger (GraalPlayer player, string Event, string[] args)
 		{
-			this.Call(Event, new object[] { player, args });
+			this.Call (Event, new object[] { player, args });
 		}
 
 		/// <summary>
 		/// Library Function -> SetTimer
 		/// </summary>
-		public void SetTimer(double Timer)
+		public void SetTimer (double Timer)
 		{
 			this.timeout = Timer;
 		}
@@ -223,28 +230,28 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Library Function -> Send Text to NPC-Controls
 		/// </summary>
-		public void SendToNC(String Message)
+		public void SendToNC (String Message)
 		{
 			//Server.SendNCChat(Message, null);
-			this.SendToRC(Message);
+			this.SendToRC (Message);
 		}
 
 		/// <summary>
 		/// Library Function -> Send Text to Remote Controls
 		/// </summary>
-		public void SendToRC(String Message)
+		public void SendToRC (String Message)
 		{
 			//Server.SendRCChat(Message);
-			this.SendRCChat(Message);
+			this.SendRCChat (Message);
 
 		}
 
 		/// <summary>
 		/// Send Text to NPC-Controls
 		/// </summary>
-		public void SendRCChat(String Message)
+		public void SendRCChat (String Message)
 		{
-			this.Server.SendPacket(new CString() + (byte)79 + Message);
+			this.Server.SendPacket (new CString () + (byte)79 + Message);
 		}
 
 		/// <summary>
@@ -268,7 +275,7 @@ namespace OpenGraal.Common.Scripting
 		/// </summary>
 		public double timevar2
 		{
-			get { return (double)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds; }
+			get { return (double)(DateTime.UtcNow - new DateTime (1970, 1, 1)).TotalSeconds; }
 		}
 	};
 }
