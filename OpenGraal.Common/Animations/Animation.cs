@@ -15,6 +15,7 @@ namespace OpenGraal.Common.Animations
 {
 	public class Animation
 	{
+
 		#region Member Variables
 
 		public bool loaded;
@@ -29,6 +30,7 @@ namespace OpenGraal.Common.Animations
 		public int currentWait;
 		public int currentFrame;
 		public bool errord = false;
+
 		#endregion
 
 		#region Get/set value functions
@@ -376,5 +378,6 @@ namespace OpenGraal.Common.Animations
 		}
 
 		#endregion
+
 	}
 }

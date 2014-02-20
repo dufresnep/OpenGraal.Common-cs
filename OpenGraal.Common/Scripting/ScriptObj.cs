@@ -251,7 +251,7 @@ namespace OpenGraal.Common.Scripting
 		/// </summary>
 		public void SendRCChat (String Message)
 		{
-			this.Server.SendPacket (new CString () + (byte)79 + Message);
+			this.Server.SendPacket (new CString () + (byte)Levels.GraalLevelNPC.PacketOut.RCCHAT + Message);
 		}
 
 		/// <summary>

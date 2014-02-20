@@ -206,7 +206,7 @@ namespace OpenGraal.Common.Scripting
 
 		public virtual void OutputError (string errorText)
 		{
-			//Console.WriteLine(errorText);
+			Console.WriteLine(errorText);
 		}
 
 		/// <summary>

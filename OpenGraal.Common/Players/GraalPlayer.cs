@@ -187,9 +187,9 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Adjust Levels
 		/// </summary>
-		public void AdjustLevels ()
+		public virtual void AdjustLevels ()
 		{
-			this._level = null;// Server.FindLevel(PlayerMap == null ? this.Level : PlayerMap.GetLevelAt(GmapX, GmapY));
+			throw new NotImplementedException("Requires override!");
 		}
 
 		/// <summary>
@@ -717,6 +717,7 @@ namespace OpenGraal.Common.Players
 					this._chat = Packet.ReadChars (Packet.ReadGUByte1 ());
 					if (_level != null)
 						_level.CallNPCs ("onPlayerChats", new object[] { this });
+					this.CallNPCs("onPlayerChats", new object[] { this });
 					break;
 
 				case Properties.PLCOLORS: // 13
@@ -746,6 +747,7 @@ namespace OpenGraal.Common.Players
 					{
 						if (_level != null)
 							_level.CallNPCs ("onPlayerDies", new object[] { this });
+						this.CallNPCs("onPlayerDies", new object[] { this });
 					}
 					break;
 
@@ -755,19 +757,8 @@ namespace OpenGraal.Common.Players
 
 				case Properties.CURLEVEL: // 20
 						// Set new level
-					this.Level = new GraalLevel (Packet.ReadChars (Packet.ReadGUByte1 ()).Trim (), new object ());
-
-						// Remove from old level
-					if (this._level != null)
-						this._level.DeletePlayer (this);
-
-						// Grab Map & Level Object
-						//this.PlayerMap = (this.Level.EndsWith(".gmap") ? Server.FindMap(this.Level) : null);
-					this.AdjustLevels ();
-
-						// Add Player
-					if (this._level != null)
-						this._level.AddPlayer (this);
+					string levelname = Packet.ReadChars(Packet.ReadGUByte1()).Trim();
+					this.CurLevel(levelname);
 					break;
 
 				case Properties.HORSEIMG: // 21
@@ -971,6 +962,11 @@ namespace OpenGraal.Common.Players
 			}
 		}
 
+		public virtual void CurLevel(string levelname)
+		{
+			throw new NotImplementedException("Requires override!");
+		}
+
 		/// <summary>
 		/// Send Prop to GServer
 		/// </summary>
@@ -1084,8 +1080,12 @@ namespace OpenGraal.Common.Players
 		/// </summary>
 		public void CallNPCs (String Event, object[] Args)
 		{
+			Console.WriteLine("Calling event \"" + Event + "\" on player \""+this.Account+"\" WeaponNpcs...");
 			foreach (ServerWeapon e in _weaponList)
-				e.Call (Event, Args);
+			{
+				Console.WriteLine("Weapon: "+e.Name);
+				e.Call(Event, Args);
+			}
 		}
 
 		#endregion
@@ -1105,7 +1105,7 @@ namespace OpenGraal.Common.Players
 		/// Function -> Send say2 Sign
 		/// </summary>
 		/// <param name="Message"></param>
-		public void Say2 (String Message)
+		public virtual void Say2 (String Message)
 		{
 			//this.Server.SendPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLMSGSIGN + (short)Id + Message);
 		}
@@ -1114,7 +1114,7 @@ namespace OpenGraal.Common.Players
 		/// Function -> Send rpgmessage to player
 		/// </summary>
 		/// <param name="Message"></param>
-		public void SendRpgMessage (String Message)
+		public virtual void SendRpgMessage (String Message)
 		{
 			//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLRPGMSG + (short)Id + CString.tokenize(Message));
 		}
@@ -1122,9 +1122,10 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Send PM from NPC-Server
 		/// </summary>
-		public void SendPM (String Message)
+		public virtual void SendPM (String Message)
 		{
 			//Server.SendPM(this.Id, Message, false);
+			Console.WriteLine("NOT IMPLEMENTED!");
 		}
 
 		#endregion
@@ -1453,6 +1454,16 @@ namespace OpenGraal.Common.Players
 			{
 				SetNick (value);
 				this.SendProp (Properties.NICKNAME);
+			}
+		}
+
+		public virtual GraalMap PlayerMap
+		{
+			get { return _playerMap; }
+			set
+			{
+				_playerMap = value;
+				this.SendProp(Properties.CURLEVEL);
 			}
 		}
 

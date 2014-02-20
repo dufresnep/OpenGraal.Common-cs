@@ -51,7 +51,7 @@ namespace OpenGraal.Common.Levels
 
 			return (pos < MapLevels.Length ? pos : -1);// (pos < MapLevels.Length ? MapLevels[pos].Name : "");
 		}
-		/*
+		
 		/// <summary>
 		/// Get Level from Map X / Map Y
 		/// </summary>
@@ -63,7 +63,7 @@ namespace OpenGraal.Common.Levels
 			else
 				return null;
 		}
-		*/
+		
 		public int GetLevelX (int index)
 		{
 			return index % 64 + index / 512 * 64;
