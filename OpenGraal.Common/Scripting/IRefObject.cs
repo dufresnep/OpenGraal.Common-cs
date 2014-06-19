@@ -18,12 +18,14 @@ namespace OpenGraal.Common.Scripting
 		{
 			WEAPON = 0,
 			LEVELNPC = 1,
+			CLASS = 2,
 		}
 
 		/// <summary>
 		/// Member Variables
 		/// </summary>
 		public ScriptObj ScriptObject;
+		public String Asm;
 		public ScriptType Type;
 		public String Script;
 

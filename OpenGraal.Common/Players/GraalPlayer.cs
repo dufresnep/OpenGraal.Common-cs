@@ -11,9 +11,8 @@ using OpenGraal.Common.Animations;
 
 namespace OpenGraal.Common.Players
 {
-	public class GraalPlayer: IGaniObj
+	public class GraalPlayer: IGaniObj, IPlayer
 	{
-
 		#region Enumerators
 
 		/// <summary>
@@ -135,7 +134,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Member Variables
 		/// </summary>
-		protected CString PropBuffer = new CString ();
+		protected CString PropBuffer = new CString();
 		protected CSocket Server = null;
 
 		#endregion
@@ -149,14 +148,15 @@ namespace OpenGraal.Common.Players
 		private FlagManager _flagManager = null;
 		private GraalLevel _level = null;
 		private GraalMap _playerMap = null;
-		private List<ServerWeapon> _weaponList = new List<ServerWeapon> ();
+		private List<ServerWeapon> _weaponList = new List<ServerWeapon>();
 		private ClientType _type = 0;
 		private bool _isLocalPlayer = true;
 		private double _hearts = 3;
 		public int _ap = 50, _arrows = 10, _bombs = 5, _bombPower = 1, _deaths = 0, _dir = 2, _fullHearts = 3, _glovePower = 1, _gralats = 0, _kills = 0, _magic = 0, _onlineTime = 0, _playerStatus = 0, _shieldPower = 1, _swordPower = 1, _gmapX = 0, _gmapY = 0, _pixelX = 0, _pixelY = 0;
 		private short _id = 0;
-		private string _account, _ani, _bodyImage, _chat, _headImage, _guild, _ipAddress, _nickname, _shieldImage, _swordImage;
+		private string _account, _ani = "idle", _bodyImage = "", _chat = "", _headImage = "", _guild, _ipAddress, _nickname = "", _shieldImage = "", _swordImage = "";
 		private int[] _touchtestd = new int[] { 24, 8, 0, 32, 24, 56, 48, 32 };
+		public Animations.Animation _currentGani;
 
 		#endregion
 
@@ -165,18 +165,18 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Constructor by Account / Id
 		/// </summary>
-		public GraalPlayer (Int16 Id)
+		public GraalPlayer(Int16 Id)
 		{
 			this.Id = Id;
-			this._colorManager = new ColorManager (new ColorManager.dSendColors (SendColors));
-			this._flagManager = new FlagManager (new FlagManager.dSendFlag (SendFlag));
+			this._colorManager = new ColorManager(new ColorManager.dSendColors(SendColors));
+			this._flagManager = new FlagManager(new FlagManager.dSendFlag(SendFlag));
 		}
 
-		public GraalPlayer (Int16 Id, CSocket socket)
+		public GraalPlayer(Int16 Id, CSocket socket)
 		{
 			this.Id = Id;
-			this._colorManager = new ColorManager (new ColorManager.dSendColors (SendColors));
-			this._flagManager = new FlagManager (new FlagManager.dSendFlag (SendFlag));
+			this._colorManager = new ColorManager(new ColorManager.dSendColors(SendColors));
+			this._flagManager = new FlagManager(new FlagManager.dSendFlag(SendFlag));
 			this.Server = socket;
 		}
 
@@ -187,7 +187,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Adjust Levels
 		/// </summary>
-		public virtual void AdjustLevels ()
+		public virtual void AdjustLevels()
 		{
 			throw new NotImplementedException("Requires override!");
 		}
@@ -195,30 +195,31 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Send Colors
 		/// </summary>
-		public void SendColors ()
+		public void SendColors()
 		{
-			this.SendProp (Properties.PLCOLORS);
+			this.SendProp(Properties.PLCOLORS);
 		}
 
 		/// <summary>
 		/// Send Flag to NPCServer
 		/// </summary>
-		public void SendFlag (String FlagName, String FlagValue)
+		public void SendFlag(String FlagName, String FlagValue)
 		{
 			// fix packet for flag
-			//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLSETFLAG + (short)Id + FlagName + "=" + FlagValue);
+			if (this.Server != null)
+				this.Server.SendPacket(new CString() + (byte)GraalLevelNPC.PacketOut.NCQUERY + (byte)GraalLevelNPC.NCREQ.PLSETFLAG + (short)Id + FlagName + "=" + FlagValue);
 		}
 
 		/// <summary>
 		/// Set Player Guild
 		/// </summary>
-		public void SetGuild (string GuildName)
+		public void SetGuild(string GuildName)
 		{
 			int guildStart, guildEnd;
-			if ((guildStart = _nickname.IndexOf ('(')) >= 0)
+			if ((guildStart = _nickname.IndexOf('(')) >= 0)
 			{
-				if ((guildEnd = _nickname.IndexOf (')', guildStart)) >= 0)
-					_nickname = _nickname.Substring (0, guildStart).TrimEnd ();
+				if ((guildEnd = _nickname.IndexOf(')', guildStart)) >= 0)
+					_nickname = _nickname.Substring(0, guildStart).TrimEnd();
 			}
 
 			if (GuildName != String.Empty)
@@ -229,19 +230,19 @@ namespace OpenGraal.Common.Players
 		/// Set Player Nickname
 		/// </summary>
 		/// <param name="Nickname"></param>
-		public void SetNick (string Nickname)
+		public void SetNick(string Nickname)
 		{
 			// Set Nickname
 			this._nickname = Nickname;
 			this._guild = "";
 
 			// Parse Guild
-			int len = Nickname.LastIndexOf ('(');
+			int len = Nickname.LastIndexOf('(');
 			if (len != -1)
 			{
-				int len2 = Nickname.LastIndexOf (')');
+				int len2 = Nickname.LastIndexOf(')');
 				if (len2 > len)
-					this._guild = Nickname.Substring (len + 1, len2 - len - 1);
+					this._guild = Nickname.Substring(len + 1, len2 - len - 1);
 			}
 		}
 
@@ -252,713 +253,715 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Get Property
 		/// </summary>
-		public CString GetProp (Properties PropId)
+		public CString GetProp(Properties PropId)
 		{
 			switch (PropId)
 			{
-			case Properties.NICKNAME: // 0
-				return new CString () + (byte)this._nickname.Length + this._nickname;
+				case Properties.NICKNAME: // 0
+					return new CString() + (byte)this._nickname.Length + this._nickname;
 
-			case Properties.MAXPOWER: // 1
-				return new CString () + (byte)this._fullHearts;
+				case Properties.MAXPOWER: // 1
+					return new CString() + (byte)this._fullHearts;
 
-			case Properties.CURPOWER: // 2
-				return new CString () + (byte)(this._hearts * 2);
+				case Properties.CURPOWER: // 2
+					return new CString() + (byte)(this._hearts * 2);
 
-			case Properties.RUPEESCOUNT: // 3
-				return new CString ().WriteGByte3 (this._gralats);
+				case Properties.RUPEESCOUNT: // 3
+					return new CString().WriteGByte3(this._gralats);
 
-			case Properties.ARROWSCOUNT: // 4
-				return new CString () + (byte)this._arrows;
+				case Properties.ARROWSCOUNT: // 4
+					return new CString() + (byte)this._arrows;
 
-			case Properties.BOMBSCOUNT: // 5
-				return new CString () + (byte)this._bombs;
+				case Properties.BOMBSCOUNT: // 5
+					return new CString() + (byte)this._bombs;
 
-			case Properties.GLOVEPOWER: // 6
-				return new CString () + (byte)this._glovePower;
+				case Properties.GLOVEPOWER: // 6
+					return new CString() + (byte)this._glovePower;
 
-			case Properties.BOMBPOWER: // 7
-				return new CString () + (byte)this._bombPower;
+				case Properties.BOMBPOWER: // 7
+					return new CString() + (byte)this._bombPower;
 
-			case Properties.SWORDPOWER: // 8
-				return new CString () + (byte)(this._swordPower + 30) + (byte)this._swordImage.Length + this._swordImage;
+				case Properties.SWORDPOWER: // 8
+					return new CString() + (byte)(this._swordPower + 30) + (byte)this._swordImage.Length + this._swordImage;
 
-			case Properties.SHIELDPOWER: // 9
-				return new CString () + (byte)(this._shieldPower + 10) + (byte)this._shieldImage.Length + this._shieldImage;
+				case Properties.SHIELDPOWER: // 9
+					return new CString() + (byte)(this._shieldPower + 10) + (byte)this._shieldImage.Length + this._shieldImage;
 
-			case Properties.ANIMATION: // 10
-				return new CString () + (byte)this._ani.Length + this._ani;
+				case Properties.ANIMATION: // 10
+					return new CString() + (byte)this._ani.Length + this._ani;
 
-			case Properties.HEADIMAGE: // 11
-				return new CString () + (byte)(this._headImage.Length + 100) + this._headImage;
+				case Properties.HEADIMAGE: // 11
+					return new CString() + (byte)(this._headImage.Length + 100) + this._headImage;
 
-			case Properties.CURCHAT: // 12
-				return new CString () + (byte)this._chat.Length + this._chat;
+				case Properties.CURCHAT: // 12
+					return new CString() + (byte)this._chat.Length + this._chat;
 
-			case Properties.PLCOLORS: // 13
-				return _colorManager.GetPacket ();
+				case Properties.PLCOLORS: // 13
+					return _colorManager.GetPacket();
 
-			case Properties.PLAYERX: // 15
-				return new CString () + (byte)(this._pixelX / 8);
+				case Properties.PLAYERX: // 15
+					return new CString() + (byte)(this._pixelX / 8);
 
-			case Properties.PLAYERY: // 16
-				return new CString () + (byte)(this._pixelY / 8);
+				case Properties.PLAYERY: // 16
+					return new CString() + (byte)(this._pixelY / 8);
 
-			case Properties.PLSPRITE: // 17
-				return new CString () + (byte)(this._dir % 4);
+				case Properties.PLSPRITE: // 17
+					return new CString() + (byte)(this._dir % 4);
 
-			case Properties.PLSTATUS: // 8
-				return new CString () + (byte)this._playerStatus;
+				case Properties.PLSTATUS: // 8
+					return new CString() + (byte)this._playerStatus;
 
-			case Properties.KILLSCOUNT: // 27
-				return new CString () + (int)this._kills;
+				case Properties.KILLSCOUNT: // 27
+					return new CString() + (int)this._kills;
 
-			case Properties.DEATHSCOUNT: // 28
-				return new CString () + (int)this._deaths;
+				case Properties.DEATHSCOUNT: // 28
+					return new CString() + (int)this._deaths;
 
-			case Properties.ONLINESECS: // 29
-				return new CString () + (int)this._onlineTime;
+				case Properties.ONLINESECS: // 29
+					return new CString() + (int)this._onlineTime; 
 
-			case Properties.ALIGNMENT: // 32
-				return new CString () + (byte)this._ap;
+				case Properties.ALIGNMENT: // 32
+					return new CString() + (byte)this._ap;
 
-			case Properties.BODYIMAGE: // 35
-				return new CString () + (byte)this._bodyImage.Length + this._bodyImage;
+				case Properties.BODYIMAGE: // 35
+					return new CString() + (byte)this._bodyImage.Length + this._bodyImage;
 
-			case Properties.PIXELX: // 75
-				{
-					int res = (_pixelX < 0 ? -_pixelX : _pixelX) << 1;
-					if (_pixelX < 0)
-						res |= 0x0001;
-					return new CString () + (short)res;
-				}
+				case Properties.PIXELX: // 75
+					{
+						short res = (short)((_pixelX < 0 ? -_pixelX : _pixelX) << 1);
+						if (_pixelX < 0)
+							res |= 0x0001;
+						return new CString() + res;
+					}
 
-			case Properties.PIXELY: // 76
-				{
-					int res = (_pixelY < 0 ? -_pixelY : _pixelY) << 1;
-					if (_pixelY < 0)
-						res |= 0x0001;
-					return new CString () + (short)res;
-				}
+				case Properties.PIXELY: // 76
+					{
+					
+						short res = (short)((_pixelY < 0 ? -_pixelY : _pixelY) << 1);
+						if (_pixelY < 0)
+							res |= 0x0001;
+						return new CString() + (short)res;
+						//return new CString() + this.PixelY;
+					}
 
-			default:
-				return new CString ();
+				default:
+					return new CString();
 			}
 		}
 
 		/// <summary>
 		/// Set Properties
 		/// </summary>
-		public static Dictionary<int, dynamic> ParseProps (CString Packet)
+		public static Dictionary<int, dynamic> ParseProps(CString Packet)
 		{
-			Dictionary<int, dynamic> testProps = new Dictionary<int,dynamic> ();
+			Dictionary<int, dynamic> testProps = new Dictionary<int,dynamic>();
 
 			while (Packet.BytesLeft > 0)
 			{
-				Int32 PropId = Packet.ReadGUByte1 ();
+				Int32 PropId = Packet.ReadGUByte1();
 
 				switch ((Properties)PropId)
 				{
-				case Properties.NICKNAME: // 0
-				case Properties.ANIMATION: // 10
-				case Properties.CURCHAT: // 12
-				case Properties.CURLEVEL: // 20
-				case Properties.HORSEIMG: // 21
-				case Properties.GATTRIB1: // 37
-				case Properties.GATTRIB2: // 38
-				case Properties.GATTRIB3: // 39
-				case Properties.GATTRIB4: // 40
-				case Properties.GATTRIB5: // 41
-				case Properties.ACCOUNTNAME: // 34
-				case Properties.BODYIMAGE: // 35
-				case Properties.GATTRIB6: // 46
-				case Properties.GATTRIB7: // 47
-				case Properties.GATTRIB8: // 48
-				case Properties.GATTRIB9: // 49
-				case Properties.LANGUAGE: // 52
-				case Properties.GATTRIB10: // 54
-				case Properties.GATTRIB11: // 55
-				case Properties.GATTRIB12: // 56
-				case Properties.GATTRIB13: // 57
-				case Properties.GATTRIB14: // 58
-				case Properties.GATTRIB15: // 59
-				case Properties.GATTRIB16: // 60
-				case Properties.GATTRIB17: // 61
-				case Properties.GATTRIB18: // 62
-				case Properties.GATTRIB19: // 63
-				case Properties.GATTRIB20: // 64
-				case Properties.GATTRIB21: // 65
-				case Properties.GATTRIB22: // 66
-				case Properties.GATTRIB23: // 67
-				case Properties.GATTRIB24: // 68
-				case Properties.GATTRIB25: // 69
-				case Properties.GATTRIB26: // 70
-				case Properties.GATTRIB27: // 71
-				case Properties.GATTRIB28: // 72
-				case Properties.GATTRIB29: // 73
-				case Properties.GATTRIB30: // 74
-				case Properties.OSTYPE: // 75
-				case Properties.COMMUNITY: // 82
-					testProps.Add (PropId, Packet.ReadChars (Packet.ReadGUByte1 ()));
-					break;
+					case Properties.NICKNAME: // 0
+					case Properties.ANIMATION: // 10
+					case Properties.CURCHAT: // 12
+					case Properties.CURLEVEL: // 20
+					case Properties.HORSEIMG: // 21
+					case Properties.GATTRIB1: // 37
+					case Properties.GATTRIB2: // 38
+					case Properties.GATTRIB3: // 39
+					case Properties.GATTRIB4: // 40
+					case Properties.GATTRIB5: // 41
+					case Properties.ACCOUNTNAME: // 34
+					case Properties.BODYIMAGE: // 35
+					case Properties.GATTRIB6: // 46
+					case Properties.GATTRIB7: // 47
+					case Properties.GATTRIB8: // 48
+					case Properties.GATTRIB9: // 49
+					case Properties.LANGUAGE: // 52
+					case Properties.GATTRIB10: // 54
+					case Properties.GATTRIB11: // 55
+					case Properties.GATTRIB12: // 56
+					case Properties.GATTRIB13: // 57
+					case Properties.GATTRIB14: // 58
+					case Properties.GATTRIB15: // 59
+					case Properties.GATTRIB16: // 60
+					case Properties.GATTRIB17: // 61
+					case Properties.GATTRIB18: // 62
+					case Properties.GATTRIB19: // 63
+					case Properties.GATTRIB20: // 64
+					case Properties.GATTRIB21: // 65
+					case Properties.GATTRIB22: // 66
+					case Properties.GATTRIB23: // 67
+					case Properties.GATTRIB24: // 68
+					case Properties.GATTRIB25: // 69
+					case Properties.GATTRIB26: // 70
+					case Properties.GATTRIB27: // 71
+					case Properties.GATTRIB28: // 72
+					case Properties.GATTRIB29: // 73
+					case Properties.GATTRIB30: // 74
+					case Properties.OSTYPE: // 75
+					case Properties.COMMUNITY: // 82
+						testProps.Add(PropId, Packet.ReadChars(Packet.ReadGUByte1()));
+						break;
 
-				case Properties.CURPOWER: // 2
-					testProps.Add (PropId, (double)Packet.ReadGUByte1 () / 2);
-					break;
+					case Properties.CURPOWER: // 2
+						testProps.Add(PropId, (double)Packet.ReadGUByte1() / 2);
+						break;
 
-				case Properties.RUPEESCOUNT: // 3
-					testProps.Add (PropId, (int)Packet.ReadGUByte3 ());
-					break;
+					case Properties.RUPEESCOUNT: // 3
+						testProps.Add(PropId, (int)Packet.ReadGUByte3());
+						break;
 
-				case Properties.MAXPOWER: // 1
-				case Properties.ARROWSCOUNT: // 4
-				case Properties.BOMBSCOUNT: // 5
-				case Properties.GLOVEPOWER: // 6
-				case Properties.BOMBPOWER: // 7
-				case Properties.PLAYERX: // 15 - obsolete
-				case Properties.PLAYERY: // 16 - obsolete
-				case Properties.PLSTATUS: // 18
-				case Properties.CARRYSPRITE: // 19
-					testProps.Add (PropId, Packet.ReadGUByte1 ());
-					break;
+					case Properties.MAXPOWER: // 1
+					case Properties.ARROWSCOUNT: // 4
+					case Properties.BOMBSCOUNT: // 5
+					case Properties.GLOVEPOWER: // 6
+					case Properties.BOMBPOWER: // 7
+					case Properties.PLAYERX: // 15 - obsolete
+					case Properties.PLAYERY: // 16 - obsolete
+					case Properties.PLSTATUS: // 18
+					case Properties.CARRYSPRITE: // 19
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
 
-				case Properties.SWORDPOWER: // 8
-					{
-						Int32 sp = Packet.ReadGUByte1 ();
-						string swordimage = "";
-						if (sp > 4)
+					case Properties.SWORDPOWER: // 8
 						{
-							sp -= 30;
-							Int32 len = Packet.ReadGUByte1 ();
-							if (len > 0)
-								swordimage = Packet.ReadChars (len);
+							Int32 sp = Packet.ReadGUByte1();
+							string swordimage = "";
+							if (sp > 4)
+							{
+								sp -= 30;
+								Int32 len = Packet.ReadGUByte1();
+								if (len > 0)
+									swordimage = Packet.ReadChars(len);
+							}
+							else
+								swordimage = "sword" + sp + ".png";
+
+							//this._swordPower = sp;
+							testProps.Add(PropId, sp.ToString() + swordimage);
+							break;
 						}
-						else
-							swordimage = "sword" + sp + ".png";
 
-						//this._swordPower = sp;
-						testProps.Add (PropId, sp.ToString () + swordimage);
-						break;
-					}
-
-				case Properties.SHIELDPOWER: // 9
-					{
-						Int32 sp = Packet.ReadGUByte1 ();
-						string shieldimage = "";
-						if (sp > 3)
+					case Properties.SHIELDPOWER: // 9
 						{
-							sp -= 10;
-							if (sp < 0)
-								break;
-							Int32 len = Packet.ReadGUByte1 ();
-							if (len > 0)
-								shieldimage = Packet.ReadChars (len);
+							Int32 sp = Packet.ReadGUByte1();
+							string shieldimage = "";
+							if (sp > 3)
+							{
+								sp -= 10;
+								if (sp < 0)
+									break;
+								Int32 len = Packet.ReadGUByte1();
+								if (len > 0)
+									shieldimage = Packet.ReadChars(len);
+							}
+							else
+								shieldimage = "shield" + sp + ".png";
+
+							testProps.Add(PropId, sp.ToString() + shieldimage);
+							break;
 						}
-						else
-							shieldimage = "shield" + sp + ".png";
 
-						testProps.Add (PropId, sp.ToString () + shieldimage);
+					case Properties.HEADIMAGE: // 11
+						{
+							Int32 len = Packet.ReadGUByte1();
+							string headimage = (len < 100 ? "head" + len + ".png" : Packet.ReadChars(len - 100));
+							testProps.Add(PropId, headimage);
+							break;
+						}
+
+					case Properties.PLCOLORS: // 13
+						Dictionary<int, int> colors = new Dictionary<int, int>();
+						for (int i = 0; i < 5; i++)
+							colors.Add(i, Packet.ReadGUByte1());
+
+						testProps.Add(PropId, colors);
 						break;
-					}
 
-				case Properties.HEADIMAGE: // 11
-					{
-						Int32 len = Packet.ReadGUByte1 ();
-						string headimage = (len < 100 ? "head" + len + ".png" : Packet.ReadChars (len - 100));
-						testProps.Add (PropId, headimage);
+					case Properties.PLAYERID: // 14
+						testProps.Add(PropId, Packet.ReadGUByte2());
 						break;
-					}
-
-				case Properties.PLCOLORS: // 13
-					Dictionary<int, int> colors = new Dictionary<int, int> ();
-					for (int i = 0; i < 5; i++)
-						colors.Add (i, Packet.ReadGUByte1 ());
-
-					testProps.Add (PropId, colors);
-					break;
-
-				case Properties.PLAYERID: // 14
-					testProps.Add (PropId, Packet.ReadGUByte2 ());
-					break;
 
 
-				case Properties.PLSPRITE: // 17
-					int dir = Packet.ReadGUByte1 () % 4;
-					testProps.Add (PropId, dir);
-					break;
-
-				case Properties.HORSEBUSHES: // 22
-					testProps.Add (PropId, Packet.ReadGUByte1 ());
-					break;
-
-				case Properties.EFFECTCOLOR: // 23
-					{
-						int len = Packet.ReadGUByte1 ();
-						if (len > 0)
-							testProps.Add (PropId, Packet.ReadGUByte4 ());
+					case Properties.PLSPRITE: // 17
+						int dir = Packet.ReadGUByte1() % 4;
+						testProps.Add(PropId, dir);
 						break;
-					}
 
-				case Properties.CARRYNPC: // 24
-					testProps.Add (PropId, Packet.ReadGUByte3 ());
-					break;
-
-				case Properties.APCOUNTER: // 25
-					testProps.Add (PropId, Packet.ReadGUByte2 ());
-					break;
-
-				case Properties.MAGICPOINTS: // 26
-					testProps.Add (PropId, Packet.ReadGUByte1 ());
-					break;
-
-				case Properties.KILLSCOUNT: // 27
-					testProps.Add (PropId, Packet.ReadGByte3 ());
-					break;
-
-				case Properties.DEATHSCOUNT: // 28
-					testProps.Add (PropId, Packet.ReadGByte3 ());
-					break;
-
-				case Properties.ONLINESECS: // 29
-					testProps.Add (PropId, Packet.ReadGByte3 ());
-					break;
-
-				case Properties.IPADDRESS: // 30
-					testProps.Add (PropId, new System.Net.IPAddress (Packet.ReadGUByte5 ()).ToString ());
-					break;
-
-				case Properties.UDPPORT: // 31
-					testProps.Add (PropId, Packet.ReadGByte3 ());
-					break;
-
-				case Properties.ALIGNMENT: // 32
-					testProps.Add (PropId, Packet.ReadGUByte1 ());
-					break;
-
-				case Properties.ADDITFLAGS: // 33
-					testProps.Add (PropId, Packet.ReadGUByte1 ());
-					break;
-
-
-
-				case Properties.PLRATING: // 36
-					testProps.Add (PropId, Packet.ReadGUByte3 ());
-					break;
-
-
-				case Properties.PLATTACHNPC: // 42
-					testProps.Add (PropId, Packet.ReadGUByte4 ());
-					break;
-
-				case Properties.GMAPLEVELX: // 43
-					testProps.Add (PropId, Packet.ReadGUByte1 ());
-					break;
-
-				case Properties.GMAPLEVELY: // 44
-					testProps.Add (PropId, Packet.ReadGUByte1 ());
-					break;
-
-				case Properties.PLAYERZ: // 45
-					testProps.Add (PropId, Packet.ReadGUByte1 ());
-					break;
-
-
-				case Properties.JOINLEAVELV: // 50
-					testProps.Add (PropId, Packet.ReadGUByte1 ());
-					break;
-
-				case Properties.CONNECTED: // 51
-					testProps.Add (PropId, true);
-					break;
-
-				case Properties.STATUSMSG: // 53
-					testProps.Add (PropId, Packet.ReadGUByte1 ());
-					break;
-
-
-				case Properties.TEXTCODEPG: // 76
-					testProps.Add (PropId, Packet.ReadGUByte3 ());
-					break;
-
-				case Properties.UNKNOWN77: // 77
-					testProps.Add (PropId, true);
-					break;
-
-				case Properties.PIXELX: // 78
-					{
-						int tmp = Packet.ReadGUByte2 ();
-
-						// If the first bit is 1, our position is negative.
-						tmp >>= 1;
-						if ((tmp & 0x0001) != 0)
-							tmp = -tmp;
-						testProps.Add (PropId, tmp);
+					case Properties.HORSEBUSHES: // 22
+						testProps.Add(PropId, Packet.ReadGUByte1());
 						break;
-					}
 
-				case Properties.PIXELY: // 79
-					{
-						int tmp = Packet.ReadGUByte2 ();
+					case Properties.EFFECTCOLOR: // 23
+						{
+							int len = Packet.ReadGUByte1();
+							if (len > 0)
+								testProps.Add(PropId, Packet.ReadGUByte4());
+							break;
+						}
 
-						// If the first bit is 1, our position is negative.
-						tmp >>= 1;
-						if ((tmp & 0x0001) != 0)
-							tmp = -tmp;
-						testProps.Add (PropId, tmp);
+					case Properties.CARRYNPC: // 24
+						testProps.Add(PropId, Packet.ReadGUByte3());
 						break;
-					}
 
-				case Properties.PIXELZ: // 80
-					testProps.Add (PropId, Packet.ReadGUByte2 ());
-					break;
+					case Properties.APCOUNTER: // 25
+						testProps.Add(PropId, Packet.ReadGUByte2());
+						break;
 
-				case Properties.UNKNOWN81: // 81
-					testProps.Add (PropId, true);
-					break;
+					case Properties.MAGICPOINTS: // 26
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
 
-				default:
+					case Properties.KILLSCOUNT: // 27
+						testProps.Add(PropId, Packet.ReadGByte3());
+						break;
+
+					case Properties.DEATHSCOUNT: // 28
+						testProps.Add(PropId, Packet.ReadGByte3());
+						break;
+
+					case Properties.ONLINESECS: // 29
+						testProps.Add(PropId, Packet.ReadGByte3());
+						break;
+
+					case Properties.IPADDRESS: // 30
+						testProps.Add(PropId, new System.Net.IPAddress(Packet.ReadGUByte5()).ToString());
+						break;
+
+					case Properties.UDPPORT: // 31
+						testProps.Add(PropId, Packet.ReadGByte3());
+						break;
+
+					case Properties.ALIGNMENT: // 32
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.ADDITFLAGS: // 33
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+
+
+					case Properties.PLRATING: // 36
+						testProps.Add(PropId, Packet.ReadGUByte3());
+						break;
+
+
+					case Properties.PLATTACHNPC: // 42
+						testProps.Add(PropId, Packet.ReadGUByte4());
+						break;
+
+					case Properties.GMAPLEVELX: // 43
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.GMAPLEVELY: // 44
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.PLAYERZ: // 45
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+
+					case Properties.JOINLEAVELV: // 50
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+					case Properties.CONNECTED: // 51
+						testProps.Add(PropId, true);
+						break;
+
+					case Properties.STATUSMSG: // 53
+						testProps.Add(PropId, Packet.ReadGUByte1());
+						break;
+
+
+					case Properties.TEXTCODEPG: // 76
+						testProps.Add(PropId, Packet.ReadGUByte3());
+						break;
+
+					case Properties.UNKNOWN77: // 77
+						testProps.Add(PropId, true);
+						break;
+
+					case Properties.PIXELX: // 78
+						{
+							int tmp = Packet.ReadGUByte2();
+
+							// If the first bit is 1, our position is negative.
+							tmp >>= 1;
+							if ((tmp & 0x0001) != 0)
+								tmp = -tmp;
+							testProps.Add(PropId, tmp);
+							break;
+						}
+
+					case Properties.PIXELY: // 79
+						{
+							int tmp = Packet.ReadGUByte2();
+
+							// If the first bit is 1, our position is negative.
+							tmp >>= 1;
+							if ((tmp & 0x0001) != 0)
+								tmp = -tmp;
+							testProps.Add(PropId, tmp);
+							break;
+						}
+
+					case Properties.PIXELZ: // 80
+						testProps.Add(PropId, Packet.ReadGUByte2());
+						break;
+
+					case Properties.UNKNOWN81: // 81
+						testProps.Add(PropId, true);
+						break;
+
+					default:
 						//System.Windows.Forms.MessageBox.Show("Invalid Prop: " + PropId);
-					break;
+						break;
 				}
 			}
 
 			return testProps;
 		}
 
-		public virtual void SetProps (CString Packet)
+		public virtual void SetProps(CString Packet)
 		{
 			bool moved = false;
 			while (Packet.BytesLeft > 0)
 			{
-				Int32 PropId = Packet.ReadGUByte1 ();
+				Int32 PropId = Packet.ReadGUByte1();
 
 				switch ((Properties)PropId)
 				{
-				case Properties.NICKNAME: // 0
-					this.SetNick (Packet.ReadChars (Packet.ReadGUByte1 ()));
-					break;
+					case Properties.NICKNAME: // 0
+						this.SetNick(Packet.ReadChars(Packet.ReadGUByte1()));
+						break;
 
-				case Properties.MAXPOWER: // 1
-					this._fullHearts = Packet.ReadGUByte1 ();
-					break;
+					case Properties.MAXPOWER: // 1
+						this._fullHearts = Packet.ReadGUByte1();
+						break;
 
-				case Properties.CURPOWER: // 2
-					this._hearts = (double)Packet.ReadGUByte1 () / 2;
-					break;
+					case Properties.CURPOWER: // 2
+						this._hearts = (double)Packet.ReadGUByte1() / 2;
+						break;
 
-				case Properties.RUPEESCOUNT: // 3
-					this._gralats = (int)Packet.ReadGUByte3 ();
-					break;
+					case Properties.RUPEESCOUNT: // 3
+						this._gralats = (int)Packet.ReadGUByte3();
+						break;
 
-				case Properties.ARROWSCOUNT: // 4
-					this._arrows = Packet.ReadGUByte1 ();
-					break;
+					case Properties.ARROWSCOUNT: // 4
+						this._arrows = Packet.ReadGUByte1();
+						break;
 
-				case Properties.BOMBSCOUNT: // 5
-					this._bombs = Packet.ReadGUByte1 ();
-					break;
+					case Properties.BOMBSCOUNT: // 5
+						this._bombs = Packet.ReadGUByte1();
+						break;
 
-				case Properties.GLOVEPOWER: // 6
-					this._glovePower = Packet.ReadGUByte1 ();
-					break;
+					case Properties.GLOVEPOWER: // 6
+						this._glovePower = Packet.ReadGUByte1();
+						break;
 
-				case Properties.BOMBPOWER: // 7
-					this._bombPower = Packet.ReadGUByte1 ();
-					break;
+					case Properties.BOMBPOWER: // 7
+						this._bombPower = Packet.ReadGUByte1();
+						break;
 
-				case Properties.SWORDPOWER: // 8
-					{
-						Int32 sp = Packet.ReadGUByte1 ();
-						if (sp > 4)
+					case Properties.SWORDPOWER: // 8
 						{
-							sp -= 30;
-							Int32 len = Packet.ReadGUByte1 ();
-							if (len > 0)
-								this._swordImage = Packet.ReadChars (len);
-						}
-						else
-							this._swordImage = "sword" + sp + ".png";
+							Int32 sp = Packet.ReadGUByte1();
+							if (sp > 4)
+							{
+								sp -= 30;
+								Int32 len = Packet.ReadGUByte1();
+								if (len > 0)
+									this._swordImage = Packet.ReadChars(len);
+							}
+							else
+								this._swordImage = "sword" + sp + ".png";
 						
-						this._swordPower = sp;
-						break;
-					}
-
-				case Properties.SHIELDPOWER: // 9
-					{
-						Int32 sp = Packet.ReadGUByte1 ();
-						if (sp > 3)
-						{
-							sp -= 10;
-							if (sp < 0)
-								break;
-							Int32 len = Packet.ReadGUByte1 ();
-							if (len > 0)
-								this._shieldImage = Packet.ReadChars (len);
+							this._swordPower = sp;
+							break;
 						}
-						else
-							this._shieldImage = "shield" + sp + ".png";
 
-						this._shieldPower = sp;
+					case Properties.SHIELDPOWER: // 9
+						{
+							Int32 sp = Packet.ReadGUByte1();
+							if (sp > 3)
+							{
+								sp -= 10;
+								if (sp < 0)
+									break;
+								Int32 len = Packet.ReadGUByte1();
+								if (len > 0)
+									this._shieldImage = Packet.ReadChars(len);
+							}
+							else
+								this._shieldImage = "shield" + sp + ".png";
+
+							this._shieldPower = sp;
+							break;
+						}
+
+					case Properties.ANIMATION: // 10
+						this._ani = Packet.ReadChars(Packet.ReadGUByte1());
 						break;
-					}
 
-				case Properties.ANIMATION: // 10
-					this._ani = Packet.ReadChars (Packet.ReadGUByte1 ());
-					break;
+					case Properties.HEADIMAGE: // 11
+						{
+							Int32 len = Packet.ReadGUByte1();
+							this._headImage = (len < 100 ? "head" + len + ".png" : Packet.ReadChars(len - 100));
+							break;
+						}
 
-				case Properties.HEADIMAGE: // 11
-					{
-						Int32 len = Packet.ReadGUByte1 ();
-						this._headImage = (len < 100 ? "head" + len + ".png" : Packet.ReadChars (len - 100));
-						break;
-					}
-
-				case Properties.CURCHAT: // 12
-					this._chat = Packet.ReadChars (Packet.ReadGUByte1 ());
-					if (_level != null)
-						_level.CallNPCs ("onPlayerChats", new object[] { this });
-					this.CallNPCs("onPlayerChats", new object[] { this });
-					break;
-
-				case Properties.PLCOLORS: // 13
-					for (int i = 0; i < 5; i++)
-						this._colorManager [i] = Packet.ReadGUByte1 ();
-					break;
-
-				case Properties.PLAYERID: // 14
-					Packet.ReadGUByte2 ();
-					break;
-
-				case Properties.PLAYERX: // 15 - obsolete
-					Packet.ReadGUByte1 ();
-					break;
-
-				case Properties.PLAYERY: // 16 - obsolete
-					Packet.ReadGUByte1 ();
-					break;
-
-				case Properties.PLSPRITE: // 17
-					this._dir = Packet.ReadGUByte1 () % 4;
-					break;
-
-				case Properties.PLSTATUS: // 18
-					this._playerStatus = Packet.ReadGUByte1 ();
-					if ((this._playerStatus & (int)Status.DEAD) != 0)
-					{
+					case Properties.CURCHAT: // 12
+						this._chat = Packet.ReadChars(Packet.ReadGUByte1());
 						if (_level != null)
-							_level.CallNPCs ("onPlayerDies", new object[] { this });
-						this.CallNPCs("onPlayerDies", new object[] { this });
-					}
-					break;
+							_level.CallNPCs("onPlayerChats", new object[] { this });
+						this.CallNPCs("onPlayerChats", new object[] { this });
+						break;
 
-				case Properties.CARRYSPRITE: // 19
-					Packet.ReadGUByte1 ();
-					break;
+					case Properties.PLCOLORS: // 13
+						for (int i = 0; i < 5; i++)
+							this._colorManager[i] = Packet.ReadGUByte1();
+						break;
 
-				case Properties.CURLEVEL: // 20
+					case Properties.PLAYERID: // 14
+						Packet.ReadGUByte2();
+						break;
+
+					case Properties.PLAYERX: // 15 - obsolete
+						Packet.ReadGUByte1();
+						break;
+
+					case Properties.PLAYERY: // 16 - obsolete
+						Packet.ReadGUByte1();
+						break;
+
+					case Properties.PLSPRITE: // 17
+						this._dir = Packet.ReadGUByte1() % 4;
+						break;
+
+					case Properties.PLSTATUS: // 18
+						this._playerStatus = Packet.ReadGUByte1();
+						if ((this._playerStatus & (int)Status.DEAD) != 0)
+						{
+							if (_level != null)
+								_level.CallNPCs("onPlayerDies", new object[] { this });
+							this.CallNPCs("onPlayerDies", new object[] { this });
+						}
+						break;
+
+					case Properties.CARRYSPRITE: // 19
+						Packet.ReadGUByte1();
+						break;
+
+					case Properties.CURLEVEL: // 20
 						// Set new level
-					string levelname = Packet.ReadChars(Packet.ReadGUByte1()).Trim();
-					this.CurLevel(levelname);
-					break;
-
-				case Properties.HORSEIMG: // 21
-					Packet.ReadChars (Packet.ReadGUByte1 ());
-					break;
-
-				case Properties.HORSEBUSHES: // 22
-					Packet.ReadGUByte1 ();
-					break;
-
-				case Properties.EFFECTCOLOR: // 23
-					{
-						int len = Packet.ReadGUByte1 ();
-						if (len > 0)
-							Packet.ReadGUByte4 ();
+						string levelname = Packet.ReadChars(Packet.ReadGUByte1()).Trim();
+						this.CurLevel(levelname);
 						break;
-					}
 
-				case Properties.CARRYNPC: // 24
-					Packet.ReadGUByte3 ();
-					break;
+					case Properties.HORSEIMG: // 21
+						Packet.ReadChars(Packet.ReadGUByte1());
+						break;
 
-				case Properties.APCOUNTER: // 25
-					Packet.ReadGUByte2 ();
-					break;
+					case Properties.HORSEBUSHES: // 22
+						Packet.ReadGUByte1();
+						break;
 
-				case Properties.MAGICPOINTS: // 26
-					this._magic = Packet.ReadGUByte1 ();
-					break;
+					case Properties.EFFECTCOLOR: // 23
+						{
+							int len = Packet.ReadGUByte1();
+							if (len > 0)
+								Packet.ReadGUByte4();
+							break;
+						}
 
-				case Properties.KILLSCOUNT: // 27
-					this._kills = Packet.ReadGByte3 ();
-					break;
+					case Properties.CARRYNPC: // 24
+						Packet.ReadGUByte3();
+						break;
 
-				case Properties.DEATHSCOUNT: // 28
-					this._deaths = Packet.ReadGByte3 ();
-					break;
+					case Properties.APCOUNTER: // 25
+						Packet.ReadGUByte2();
+						break;
 
-				case Properties.ONLINESECS: // 29
-					this._onlineTime = Packet.ReadGByte3 ();
-					break;
+					case Properties.MAGICPOINTS: // 26
+						this._magic = Packet.ReadGUByte1();
+						break;
 
-				case Properties.IPADDRESS: // 30
-					this._ipAddress = new System.Net.IPAddress (Packet.ReadGUByte5 ()).ToString ();
-					break;
+					case Properties.KILLSCOUNT: // 27
+						this._kills = Packet.ReadGByte3();
+						break;
 
-				case Properties.UDPPORT: // 31
-					Packet.ReadGByte3 ();
-					break;
+					case Properties.DEATHSCOUNT: // 28
+						this._deaths = Packet.ReadGByte3();
+						break;
 
-				case Properties.ALIGNMENT: // 32
-					Packet.ReadGUByte1 ();
-					break;
+					case Properties.ONLINESECS: // 29
+						this._onlineTime = Packet.ReadGByte3();
+						break;
 
-				case Properties.ADDITFLAGS: // 33
-					Packet.ReadGUByte1 ();
-					break;
+					case Properties.IPADDRESS: // 30
+						this._ipAddress = new System.Net.IPAddress(Packet.ReadGUByte5()).ToString();
+						break;
 
-				case Properties.ACCOUNTNAME: // 34
-					this._account = Packet.ReadChars (Packet.ReadGUByte1 ());
-					break;
+					case Properties.UDPPORT: // 31
+						Packet.ReadGByte3();
+						break;
 
-				case Properties.BODYIMAGE: // 35
-					this._bodyImage = Packet.ReadChars (Packet.ReadGUByte1 ());
-					break;
+					case Properties.ALIGNMENT: // 32
+						Packet.ReadGUByte1();
+						break;
 
-				case Properties.PLRATING: // 36
-					Packet.ReadGUByte3 ();
-					break;
+					case Properties.ADDITFLAGS: // 33
+						Packet.ReadGUByte1();
+						break;
 
-				case Properties.GATTRIB1: // 37
-				case Properties.GATTRIB2: // 38
-				case Properties.GATTRIB3: // 39
-				case Properties.GATTRIB4: // 40
-				case Properties.GATTRIB5: // 41
-					Packet.ReadChars (Packet.ReadGUByte1 ());
-					break;
+					case Properties.ACCOUNTNAME: // 34
+						this._account = Packet.ReadChars(Packet.ReadGUByte1());
+						break;
 
-				case Properties.PLATTACHNPC: // 42
-					Packet.ReadGUByte4 ();
-					break;
+					case Properties.BODYIMAGE: // 35
+						this._bodyImage = Packet.ReadChars(Packet.ReadGUByte1());
+						break;
 
-				case Properties.GMAPLEVELX: // 43
-					_gmapX = Packet.ReadGUByte1 ();
-					this.AdjustLevels ();
-					break;
+					case Properties.PLRATING: // 36
+						Packet.ReadGUByte3();
+						break;
 
-				case Properties.GMAPLEVELY: // 44
-					_gmapY = Packet.ReadGUByte1 ();
-					this.AdjustLevels ();
-					break;
+					case Properties.GATTRIB1: // 37
+					case Properties.GATTRIB2: // 38
+					case Properties.GATTRIB3: // 39
+					case Properties.GATTRIB4: // 40
+					case Properties.GATTRIB5: // 41
+						Packet.ReadChars(Packet.ReadGUByte1());
+						break;
 
-				case Properties.PLAYERZ: // 45
-					Packet.ReadGUByte1 ();
-					break;
+					case Properties.PLATTACHNPC: // 42
+						Packet.ReadGUByte4();
+						break;
 
-				case Properties.GATTRIB6: // 46
-				case Properties.GATTRIB7: // 47
-				case Properties.GATTRIB8: // 48
-				case Properties.GATTRIB9: // 49
-					Packet.ReadChars (Packet.ReadGUByte1 ());
-					break;
+					case Properties.GMAPLEVELX: // 43
+						_gmapX = Packet.ReadGUByte1();
+						this.AdjustLevels();
+						break;
 
-				case Properties.JOINLEAVELV: // 50
-					Packet.ReadGUByte1 ();
-					break;
+					case Properties.GMAPLEVELY: // 44
+						_gmapY = Packet.ReadGUByte1();
+						this.AdjustLevels();
+						break;
 
-				case Properties.CONNECTED: // 51
+					case Properties.PLAYERZ: // 45
+						Packet.ReadGUByte1();
+						break;
+
+					case Properties.GATTRIB6: // 46
+					case Properties.GATTRIB7: // 47
+					case Properties.GATTRIB8: // 48
+					case Properties.GATTRIB9: // 49
+						Packet.ReadChars(Packet.ReadGUByte1());
+						break;
+
+					case Properties.JOINLEAVELV: // 50
+						Packet.ReadGUByte1();
+						break;
+
+					case Properties.CONNECTED: // 51
 						//Server.PlayerManager.DeletePlayer(Id);
-					break;
-
-				case Properties.LANGUAGE: // 52
-					Packet.ReadChars (Packet.ReadGUByte1 ());
-					break;
-
-				case Properties.STATUSMSG: // 53
-					Packet.ReadGUByte1 ();
-					break;
-
-				case Properties.GATTRIB10: // 54
-				case Properties.GATTRIB11: // 55
-				case Properties.GATTRIB12: // 56
-				case Properties.GATTRIB13: // 57
-				case Properties.GATTRIB14: // 58
-				case Properties.GATTRIB15: // 59
-				case Properties.GATTRIB16: // 60
-				case Properties.GATTRIB17: // 61
-				case Properties.GATTRIB18: // 62
-				case Properties.GATTRIB19: // 63
-				case Properties.GATTRIB20: // 64
-				case Properties.GATTRIB21: // 65
-				case Properties.GATTRIB22: // 66
-				case Properties.GATTRIB23: // 67
-				case Properties.GATTRIB24: // 68
-				case Properties.GATTRIB25: // 69
-				case Properties.GATTRIB26: // 70
-				case Properties.GATTRIB27: // 71
-				case Properties.GATTRIB28: // 72
-				case Properties.GATTRIB29: // 73
-				case Properties.GATTRIB30: // 74
-					Packet.ReadChars (Packet.ReadGUByte1 ());
-					break;
-
-				case Properties.OSTYPE: // 75
-					Packet.ReadChars (Packet.ReadGUByte1 ());
-					break;
-
-				case Properties.TEXTCODEPG: // 76
-					Packet.ReadGUByte3 ();
-					break;
-
-				case Properties.UNKNOWN77: // 77
-					break;
-
-				case Properties.PIXELX: // 78
-					{
-						int tmp = this._pixelX = Packet.ReadGUByte2 ();
-
-						// If the first bit is 1, our position is negative.
-						this._pixelX >>= 1;
-						if ((tmp & 0x0001) != 0)
-							this._pixelX = -this._pixelX;
-						moved = true;
 						break;
-					}
 
-				case Properties.PIXELY: // 79
-					{
-						int tmp = this._pixelY = Packet.ReadGUByte2 ();
-
-						// If the first bit is 1, our position is negative.
-						this._pixelY >>= 1;
-						if ((tmp & 0x0001) != 0)
-							this._pixelY = -this._pixelY;
-						moved = true;
+					case Properties.LANGUAGE: // 52
+						Packet.ReadChars(Packet.ReadGUByte1());
 						break;
-					}
 
-				case Properties.PIXELZ: // 80
-					Packet.ReadGUByte2 ();
-					break;
+					case Properties.STATUSMSG: // 53
+						Packet.ReadGUByte1();
+						break;
 
-				case Properties.UNKNOWN81: // 81
-					break;
+					case Properties.GATTRIB10: // 54
+					case Properties.GATTRIB11: // 55
+					case Properties.GATTRIB12: // 56
+					case Properties.GATTRIB13: // 57
+					case Properties.GATTRIB14: // 58
+					case Properties.GATTRIB15: // 59
+					case Properties.GATTRIB16: // 60
+					case Properties.GATTRIB17: // 61
+					case Properties.GATTRIB18: // 62
+					case Properties.GATTRIB19: // 63
+					case Properties.GATTRIB20: // 64
+					case Properties.GATTRIB21: // 65
+					case Properties.GATTRIB22: // 66
+					case Properties.GATTRIB23: // 67
+					case Properties.GATTRIB24: // 68
+					case Properties.GATTRIB25: // 69
+					case Properties.GATTRIB26: // 70
+					case Properties.GATTRIB27: // 71
+					case Properties.GATTRIB28: // 72
+					case Properties.GATTRIB29: // 73
+					case Properties.GATTRIB30: // 74
+						Packet.ReadChars(Packet.ReadGUByte1());
+						break;
 
-				case Properties.COMMUNITY: // 82
-					Packet.ReadChars (Packet.ReadGUByte1 ());
-					break;
+					case Properties.OSTYPE: // 75
+						Packet.ReadChars(Packet.ReadGUByte1());
+						break;
 
-				default:
+					case Properties.TEXTCODEPG: // 76
+						Packet.ReadGUByte3();
+						break;
+
+					case Properties.UNKNOWN77: // 77
+						break;
+
+					case Properties.PIXELX: // 78
+						{
+							int tmp = this._pixelX = Packet.ReadGUByte2();
+
+							// If the first bit is 1, our position is negative.
+							this._pixelX >>= 1;
+							if ((tmp & 0x0001) != 0)
+								this._pixelX = -this._pixelX;
+							moved = true;
+							break;
+						}
+
+					case Properties.PIXELY: // 79
+						{
+							int tmp = this._pixelY = Packet.ReadGUByte2();
+
+							// If the first bit is 1, our position is negative.
+							this._pixelY >>= 1;
+							if ((tmp & 0x0001) != 0)
+								this._pixelY = -this._pixelY;
+							moved = true;
+							break;
+						}
+
+					case Properties.PIXELZ: // 80
+						Packet.ReadGUByte2();
+						break;
+
+					case Properties.UNKNOWN81: // 81
+						break;
+
+					case Properties.COMMUNITY: // 82
+						Packet.ReadChars(Packet.ReadGUByte1());
+						break;
+
+					default:
 						//System.Windows.Forms.MessageBox.Show("Invalid Prop: " + PropId);
-					break;
+						break;
 				}
 			}
 
 			if (moved && _level != null)
 			{
-				GraalLevelNPC npc = _level.isOnNPC (_pixelX + _touchtestd [Dir * 2], _pixelY + _touchtestd [Dir * 2 + 1]);
+				GraalLevelNPC npc = _level.isOnNPC(_pixelX + _touchtestd[Dir * 2], _pixelY + _touchtestd[Dir * 2 + 1]);
 				if (npc != null)
-					npc.Call ("onPlayerTouchsMe", new object[] { this });
+					npc.Call("onPlayerTouchsMe", new object[] { this });
 			}
 		}
 
@@ -970,22 +973,22 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Send Prop to GServer
 		/// </summary>
-		public virtual void SendProp (Properties PropId)
+		public virtual void SendProp(Properties PropId)
 		{
-			PropBuffer.Write (new CString () + (byte)PropId + GetProp (PropId));
+			PropBuffer.Write(new CString() + (byte)PropId + GetProp(PropId));
 			if (this.Server != null)
-				this.Server.SendPacket (new CString () + (byte)103 + (byte)7 + (short)this.Id + (byte)PropId + GetProp (PropId));
+				this.Server.SendPacket(new CString() + (byte)103 + (byte)7 + (short)this.Id + (byte)PropId + GetProp(PropId));
 		}
 
 		/// <summary>
 		/// Send Property Changes
 		/// </summary>
-		public void SendPropBuffer ()
+		public void SendPropBuffer()
 		{
 			if (PropBuffer.Length > 0)
 			{
 				//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLSETPROPS + (short)this.Id + PropBuffer);
-				PropBuffer.Clear ();
+				PropBuffer.Clear();
 			}
 		}
 
@@ -997,51 +1000,51 @@ namespace OpenGraal.Common.Players
 		/// Function -> Add Weapon to Player (by object)
 		/// </summary>
 		/// <param name="Weapon"></param>
-		public void AddWeapon (ServerWeapon Weapon)
+		public void AddWeapon(ServerWeapon Weapon)
 		{
 			if (Weapon == null)
 				return;
 
-			this.Server.SendPacket (new CString () + (byte)103 + (byte)10 + (short)Id + Weapon.Name);
-			_weaponList.Add (Weapon);
+			this.Server.SendPacket(new CString() + (byte)103 + (byte)10 + (short)Id + Weapon.Name);
+			_weaponList.Add(Weapon);
 		}
 
 		/// <summary>
 		/// Function -> Add Weapon to Player (by string)
 		/// </summary>
-		public void AddWeapon (String WeaponName)
+		public void AddWeapon(String WeaponName)
 		{
-			ServerWeapon Weapon = FindWeapon (WeaponName);
+			ServerWeapon Weapon = FindWeapon(WeaponName);
 			if (Weapon != null)
-				this.AddWeapon (Weapon);
+				this.AddWeapon(Weapon);
 		}
 
 		/// <summary>
 		/// Function -> Delete Weapon from Player
 		/// </summary>
-		public void DeleteWeapon (String WeaponName)
+		public void DeleteWeapon(String WeaponName)
 		{
-			DeleteWeapon (WeaponName, true);
+			DeleteWeapon(WeaponName, true);
 		}
 
 		/// <summary>
 		/// Function -> Delete Weapon from Player
 		/// </summary>
-		public void DeleteWeapon (String WeaponName, bool SendToServer)
+		public void DeleteWeapon(String WeaponName, bool SendToServer)
 		{
-			ServerWeapon weapon = FindWeapon (WeaponName);
+			ServerWeapon weapon = FindWeapon(WeaponName);
 			if (weapon != null)
 			{
 				//if (SendToServer)
 				//	Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLDELWEP + (short)Id + WeaponName);
-				_weaponList.Remove (weapon);
+				_weaponList.Remove(weapon);
 			}
 		}
 
 		/// <summary>
 		/// Function -> Find Weapon
 		/// </summary>
-		public ServerWeapon FindWeapon (String WeaponName)
+		public ServerWeapon FindWeapon(String WeaponName)
 		{
 			foreach (ServerWeapon weapon in _weaponList)
 			{
@@ -1054,7 +1057,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Function -> Disable Player Weapons
 		/// </summary>
-		public void DisableWeapons ()
+		public void DisableWeapons()
 		{
 			if ((this._playerStatus & (int)Status.ALLOWWEAPONS) != 0)
 			{
@@ -1066,7 +1069,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Function -> Enable Player Weapons
 		/// </summary>
-		public void EnableWeapons ()
+		public void EnableWeapons()
 		{
 			if ((this._playerStatus & (int)Status.ALLOWWEAPONS) == 0)
 			{
@@ -1078,12 +1081,12 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Call NPC Events
 		/// </summary>
-		public void CallNPCs (String Event, object[] Args)
+		public void CallNPCs(String Event, object[] Args)
 		{
-			Console.WriteLine("Calling event \"" + Event + "\" on player \""+this.Account+"\" WeaponNpcs...");
+			Console.WriteLine("Calling event \"" + Event + "\" on player \"" + this.Account + "\" WeaponNpcs...");
 			foreach (ServerWeapon e in _weaponList)
 			{
-				Console.WriteLine("Weapon: "+e.Name);
+				Console.WriteLine("Weapon: " + e.Name);
 				e.Call(Event, Args);
 			}
 		}
@@ -1095,7 +1098,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Function -> SetAni (Set Animation + Gani Attributes)
 		/// </summary>
-		public void SetAni (String Ani, params string[] Params)
+		public void SetAni(String Ani, params string[] Params)
 		{
 			this.Ani = Ani;
 			// set ganiattr params
@@ -1105,7 +1108,7 @@ namespace OpenGraal.Common.Players
 		/// Function -> Send say2 Sign
 		/// </summary>
 		/// <param name="Message"></param>
-		public virtual void Say2 (String Message)
+		public virtual void Say2(String Message)
 		{
 			//this.Server.SendPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLMSGSIGN + (short)Id + Message);
 		}
@@ -1114,7 +1117,7 @@ namespace OpenGraal.Common.Players
 		/// Function -> Send rpgmessage to player
 		/// </summary>
 		/// <param name="Message"></param>
-		public virtual void SendRpgMessage (String Message)
+		public virtual void SendRpgMessage(String Message)
 		{
 			//Server.SendGSPacket(new CString() + (byte)GServerConnection.PacketOut.NCQUERY + (byte)GServerConnection.NCREQ.PLRPGMSG + (short)Id + CString.tokenize(Message));
 		}
@@ -1122,7 +1125,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Send PM from NPC-Server
 		/// </summary>
-		public virtual void SendPM (String Message)
+		public virtual void SendPM(String Message)
 		{
 			//Server.SendPM(this.Id, Message, false);
 			Console.WriteLine("NOT IMPLEMENTED!");
@@ -1153,7 +1156,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_ani = value;
-				this.SendProp (Properties.ANIMATION);
+				this.SendProp(Properties.ANIMATION);
 			}
 		}
 
@@ -1163,7 +1166,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_ap = value;
-				this.SendProp (Properties.ALIGNMENT);
+				this.SendProp(Properties.ALIGNMENT);
 			}
 		}
 
@@ -1181,7 +1184,7 @@ namespace OpenGraal.Common.Players
 				if (_arrows != value)
 				{
 					_arrows = value;
-					this.SendProp (Properties.ARROWSCOUNT);
+					this.SendProp(Properties.ARROWSCOUNT);
 				}
 			}
 		}
@@ -1194,7 +1197,7 @@ namespace OpenGraal.Common.Players
 				if (this._gmapX != value)
 				{
 					this._gmapX = value;
-					this.SendProp (Properties.GMAPLEVELX);
+					this.SendProp(Properties.GMAPLEVELX);
 				}
 			}
 		}
@@ -1207,7 +1210,7 @@ namespace OpenGraal.Common.Players
 				if (this._gmapY != value)
 				{
 					this._gmapY = value;
-					this.SendProp (Properties.GMAPLEVELY);
+					this.SendProp(Properties.GMAPLEVELY);
 				}
 			}
 		}
@@ -1218,7 +1221,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_bodyImage = value;
-				this.SendProp (Properties.BODYIMAGE);
+				this.SendProp(Properties.BODYIMAGE);
 			}
 		}
 
@@ -1230,7 +1233,7 @@ namespace OpenGraal.Common.Players
 				if (_bombs != value)
 				{
 					_bombs = value;
-					this.SendProp (Properties.BOMBSCOUNT);
+					this.SendProp(Properties.BOMBSCOUNT);
 				}
 			}
 		}
@@ -1243,7 +1246,7 @@ namespace OpenGraal.Common.Players
 				if (_bombPower != value)
 				{
 					_bombPower = value;
-					this.SendProp (Properties.BOMBPOWER);
+					this.SendProp(Properties.BOMBPOWER);
 				}
 			}
 		}
@@ -1254,7 +1257,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_chat = value;
-				this.SendProp (Properties.CURCHAT);
+				this.SendProp(Properties.CURCHAT);
 			}
 		}
 
@@ -1277,7 +1280,7 @@ namespace OpenGraal.Common.Players
 				if (this._arrows != value)
 				{
 					this._arrows = value;
-					this.SendProp (Properties.ARROWSCOUNT);
+					this.SendProp(Properties.ARROWSCOUNT);
 				}
 			}
 		}
@@ -1288,7 +1291,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._deaths = value;
-				this.SendProp (Properties.DEATHSCOUNT);
+				this.SendProp(Properties.DEATHSCOUNT);
 			}
 		}
 
@@ -1298,7 +1301,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._dir = value;
-				this.SendProp (Properties.PLSPRITE);
+				this.SendProp(Properties.PLSPRITE);
 			}
 		}
 
@@ -1314,7 +1317,8 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._pixelX = value;
-				this.SendProp (Properties.PIXELX);
+				this.SendProp(Properties.PIXELX);
+				Console.WriteLine("Sending PixelX: " + this.PixelX);
 			}
 		}
 
@@ -1324,7 +1328,8 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._pixelY = value;
-				this.SendProp (Properties.PIXELY);
+				this.SendProp(Properties.PIXELY);
+				Console.WriteLine("Sending PixelY: " + this.PixelY);
 			}
 		}
 
@@ -1351,7 +1356,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._fullHearts = value;
-				this.SendProp (Properties.MAXPOWER);
+				this.SendProp(Properties.MAXPOWER);
 			}
 		}
 
@@ -1361,7 +1366,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._glovePower = value;
-				this.SendProp (Properties.GLOVEPOWER);
+				this.SendProp(Properties.GLOVEPOWER);
 			}
 		}
 
@@ -1370,8 +1375,8 @@ namespace OpenGraal.Common.Players
 			get { return this._guild; }
 			set
 			{
-				SetGuild (value);
-				this.SendProp (Properties.NICKNAME);
+				SetGuild(value);
+				this.SendProp(Properties.NICKNAME);
 			}
 		}
 
@@ -1381,7 +1386,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._gralats = value;
-				this.SendProp (Properties.RUPEESCOUNT);
+				this.SendProp(Properties.RUPEESCOUNT);
 			}
 		}
 
@@ -1391,7 +1396,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._headImage = value;
-				this.SendProp (Properties.HEADIMAGE);
+				this.SendProp(Properties.HEADIMAGE);
 			}
 		}
 
@@ -1401,7 +1406,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._headImage = value;
-				this.SendProp (Properties.HEADIMAGE);
+				this.SendProp(Properties.HEADIMAGE);
 			}
 		}
 
@@ -1411,7 +1416,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._hearts = value;
-				this.SendProp (Properties.CURPOWER);
+				this.SendProp(Properties.CURPOWER);
 			}
 		}
 
@@ -1427,12 +1432,12 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				this._kills = value;
-				this.SendProp (Properties.KILLSCOUNT);
+				this.SendProp(Properties.KILLSCOUNT);
 			}
 		}
 
-		public virtual GraalLevel Level // should return levelobject
-		{
+		public virtual GraalLevel Level
+		{ // should return levelobject
 			get { return _level; }
 			set { _level = value; }
 		}
@@ -1443,7 +1448,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_magic = value;
-				this.SendProp (Properties.MAGICPOINTS);
+				this.SendProp(Properties.MAGICPOINTS);
 			}
 		}
 
@@ -1452,8 +1457,8 @@ namespace OpenGraal.Common.Players
 			get { return _nickname; }
 			set
 			{
-				SetNick (value);
-				this.SendProp (Properties.NICKNAME);
+				SetNick(value);
+				this.SendProp(Properties.NICKNAME);
 			}
 		}
 
@@ -1473,7 +1478,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_gralats = value;
-				this.SendProp (Properties.RUPEESCOUNT);
+				this.SendProp(Properties.RUPEESCOUNT);
 			}
 		}
 
@@ -1483,7 +1488,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_shieldImage = value;
-				this.SendProp (Properties.SHIELDPOWER);
+				this.SendProp(Properties.SHIELDPOWER);
 			}
 		}
 
@@ -1493,7 +1498,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_shieldImage = value;
-				this.SendProp (Properties.SHIELDPOWER);
+				this.SendProp(Properties.SHIELDPOWER);
 			}
 		}
 
@@ -1503,7 +1508,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_shieldPower = value;
-				this.SendProp (Properties.SHIELDPOWER);
+				this.SendProp(Properties.SHIELDPOWER);
 			}
 		}
 
@@ -1513,7 +1518,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_swordImage = value;
-				this.SendProp (Properties.SWORDPOWER);
+				this.SendProp(Properties.SWORDPOWER);
 			}
 		}
 
@@ -1523,7 +1528,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_swordImage = value;
-				this.SendProp (Properties.SWORDPOWER);
+				this.SendProp(Properties.SWORDPOWER);
 			}
 		}
 
@@ -1533,7 +1538,7 @@ namespace OpenGraal.Common.Players
 			set
 			{
 				_swordPower = value;
-				this.SendProp (Properties.SWORDPOWER);
+				this.SendProp(Properties.SWORDPOWER);
 			}
 		}
 
@@ -1547,8 +1552,8 @@ namespace OpenGraal.Common.Players
 			get { return _pixelX / 16; }
 			set
 			{
-				_pixelX = Convert.ToInt32 (value * 16.0);
-				this.SendProp (Properties.PIXELX);
+				_pixelX = Convert.ToInt32(value * 16.0);
+				this.SendProp(Properties.PIXELX);
 			}
 		}
 
@@ -1557,8 +1562,8 @@ namespace OpenGraal.Common.Players
 			get { return _pixelY / 16; }
 			set
 			{
-				_pixelY = Convert.ToInt32 (value * 16.0);
-				this.SendProp (Properties.PIXELY);
+				_pixelY = Convert.ToInt32(value * 16.0);
+				this.SendProp(Properties.PIXELY);
 			}
 		}
 
@@ -1581,6 +1586,5 @@ namespace OpenGraal.Common.Players
 		}
 
 		#endregion
-
 	}
 }

@@ -21,7 +21,7 @@ namespace OpenGraal.Common.Animations
 			get;
 			set;
 		}
-		
+
 		string ShieldImage
 		{
 			get;
@@ -45,7 +45,6 @@ namespace OpenGraal.Common.Animations
 			get;
 			set;
 		}
-
 	}
 }
 

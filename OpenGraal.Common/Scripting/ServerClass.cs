@@ -9,17 +9,17 @@ using OpenGraal.Common.Players;
 
 namespace OpenGraal.Common.Scripting
 {
-	public class ServerClass
+	public class ServerClass : IRefObject
 	{
 		/// <summary>
 		/// Member Variables
 		/// </summary>
-		public String Name, Script;
+		public String Name;
 
 		/// <summary>
 		/// Constructor
 		/// </summary>
-		public ServerClass(String ClassName, String ClassScript)
+		public ServerClass(String ClassName, String ClassScript) : base(ScriptType.CLASS)
 		{
 			this.UpdateClass(ClassName, ClassScript);
 		}
@@ -31,6 +31,14 @@ namespace OpenGraal.Common.Scripting
 		{
 			this.Name = ClassName;
 			this.Script = ClassScript;
+		}
+
+		/// <summary>
+		/// Override -> Error Text
+		/// </summary>
+		public override string GetErrorText()
+		{
+			return new StringBuilder(Name).ToString();
 		}
 	}
 }

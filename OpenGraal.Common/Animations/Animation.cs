@@ -15,17 +15,16 @@ namespace OpenGraal.Common.Animations
 {
 	public class Animation
 	{
-
 		#region Member Variables
 
-		public bool loaded;
+		public bool loaded = false;
 		public CString name, real;
 		private bool _isLoop, _isContinuous, _isSingleDir = false;
 		private CString _setBackTo;
 		private int _max;
-		private List<int> _waits = new List<int> ();
-		private List<Frame> _frames = new List<Frame> ();
-		private List<Sprite> _spriteList = new List<Sprite> ();
+		private List<int> _waits = new List<int>();
+		private List<Frame> _frames = new List<Frame>();
+		private List<Sprite> _spriteList = new List<Sprite>();
 		public bool playing = true;
 		public int currentWait;
 		public int currentFrame;
@@ -135,28 +134,28 @@ namespace OpenGraal.Common.Animations
 
 		#region Constructor / Destructor
 
-		public Animation ()
+		public Animation()
 		{
 			
 		}
 
 		~Animation ()
 		{
-			_spriteList.Clear ();
-			_frames.Clear ();
+			_spriteList.Clear();
+			_frames.Clear();
 		}
 
 		#endregion
 
 		#region Public functions
 
-		public static String nextLine (Stack<string> lines)
+		public static String nextLine(Stack<string> lines)
 		{
 			if (lines.Count > 0)
 			{
-				String line = lines.Pop ();
-				line.Replace ("\n", "");
-				line.Replace ("\r", "");
+				String line = lines.Pop();
+				line.Replace("\n", "");
+				line.Replace("\r", "");
 
 				return line;
 			}
@@ -166,7 +165,7 @@ namespace OpenGraal.Common.Animations
 			}
 		}
 
-		public Sprite getSpriteDef (int id)
+		public Sprite getSpriteDef(int id)
 		{
 			foreach (Sprite s in _spriteList)
 			{
@@ -177,160 +176,162 @@ namespace OpenGraal.Common.Animations
 			return null;
 		}
 
-		public void loadFromFile (String path)
+		public void loadFromFile(String path)
 		{
-			if (!path.Contains (".gani"))
+			if (!path.Contains(".gani"))
 				path = path + "idle.gani";
 
 			//Console.WriteLine("Loading animation from " + path + "...");
+			if (!System.IO.File.Exists(path))
+				throw new System.IO.FileNotFoundException("Gani doesn't exist!");
 
-			Stack<string> revLines = new Stack<string> (System.IO.File.ReadAllLines (path));
-			Stack<string> lines = new Stack<string> ();
+			Stack<string> revLines = new Stack<string>(System.IO.File.ReadAllLines(path));
+			Stack<string> lines = new Stack<string>();
 			foreach (string l in revLines)
 			{
-				lines.Push (l);
+				lines.Push(l);
 			}
 
-			String line = nextLine (lines);
+			String line = nextLine(lines);
 			while (lines.Count > 0)
 			{
-				line = line.Trim ();
-				line = Regex.Replace (line, @"[ ]{2,}", @" ");
+				line = line.Trim();
+				line = Regex.Replace(line, @"[ ]{2,}", @" ");
 
-				string[] words = line.Split (new char[] { ' ' });
-				if (words.Count () == 0)
+				string[] words = line.Split(new char[] { ' ' });
+				if (words.Count() == 0)
 				{
 					continue;
 				}
 
-				switch (words [0])
+				switch (words[0])
 				{
-				case "SINGLEDIRECTION":
-					{
-						_isSingleDir = true;
-						break;
-					}
-
-				case "SPRITE":
-					{
-						Sprite s = new Sprite ();
-						s.SpriteId = int.Parse (words [1]);
-						s.Type = new CString (words [2]);
-						s.X = int.Parse (words [3]);
-						s.Y = int.Parse (words [4]);
-						s.Width = int.Parse (words [5]);
-						s.Height = int.Parse (words [6]);
-						_spriteList.Add (s);
-						break;
-					}
-
-				case "SCRIPT":
-					{
-						while (line != "SCRIPTEND")
+					case "SINGLEDIRECTION":
 						{
-							line = nextLine (lines);
+							_isSingleDir = true;
+							break;
 						}
-						break;
-					}
 
-				case "ANI":
-					{
-						line = nextLine (lines);
-
-						while (line != "ANIEND")
+					case "SPRITE":
 						{
-							if (line.Length == 0)
+							Sprite s = new Sprite();
+							s.SpriteId = int.Parse(words[1]);
+							s.Type = new CString(words[2]);
+							s.X = int.Parse(words[3]);
+							s.Y = int.Parse(words[4]);
+							s.Width = int.Parse(words[5]);
+							s.Height = int.Parse(words[6]);
+							_spriteList.Add(s);
+							break;
+						}
+
+					case "SCRIPT":
+						{
+							while (line != "SCRIPTEND")
 							{
-								line = nextLine (lines);
-								continue;
+								line = nextLine(lines);
 							}
+							break;
+						}
 
-							if (line.Split (' ') [0] == "PLAYSOUND")
+					case "ANI":
+						{
+							line = nextLine(lines);
+
+							while (line != "ANIEND")
 							{
-								line = nextLine (lines);
-								continue;
-							}
-
-							Frame newFrame = new Frame ();
-							for (int dir = 0; dir < ((_isSingleDir) ? 1 : 4); dir++)
-							{
-								string[] offsets = line.Split (new char[] { ',' });
-
-								newFrame.dirFrames [dir] = new DirFrame ();
-								foreach (string offsetO in offsets)
+								if (line.Length == 0)
 								{
-									string offset = offsetO.Trim ();
-									offset = Regex.Replace (offset, @"[ ]{2,}", @" ");
+									line = nextLine(lines);
+									continue;
+								}
 
-									string[] partsO = offset.Split (new char[] { ' ' });
-									string[] parts = new string[3];
-									int c = 0;
-									foreach (string p in partsO)
+								if (line.Split(' ')[0] == "PLAYSOUND")
+								{
+									line = nextLine(lines);
+									continue;
+								}
+
+								Frame newFrame = new Frame();
+								for (int dir = 0; dir < ((_isSingleDir) ? 1 : 4); dir++)
+								{
+									string[] offsets = line.Split(new char[] { ',' });
+
+									newFrame.dirFrames[dir] = new DirFrame();
+									foreach (string offsetO in offsets)
 									{
-										if (IsNumeric (p))
+										string offset = offsetO.Trim();
+										offset = Regex.Replace(offset, @"[ ]{2,}", @" ");
+
+										string[] partsO = offset.Split(new char[] { ' ' });
+										string[] parts = new string[3];
+										int c = 0;
+										foreach (string p in partsO)
 										{
-											parts [c++] = p;
+											if (IsNumeric(p))
+											{
+												parts[c++] = p;
+											}
 										}
+
+										StageSprite newStageSprite = new StageSprite();
+
+										newStageSprite.SpriteId = int.Parse(parts[0]);
+										newStageSprite.X = int.Parse(parts[1]);
+										newStageSprite.Y = int.Parse(parts[2]);
+
+										newFrame.dirFrames[dir].sprites.Add(newStageSprite);
 									}
 
-									StageSprite newStageSprite = new StageSprite ();
-
-									newStageSprite.SpriteId = int.Parse (parts [0]);
-									newStageSprite.X = int.Parse (parts [1]);
-									newStageSprite.Y = int.Parse (parts [2]);
-
-									newFrame.dirFrames [dir].sprites.Add (newStageSprite);
+									if (dir < ((_isSingleDir) ? 0 : 3))
+									{
+										line = nextLine(lines);
+									}
 								}
 
-								if (dir < ((_isSingleDir) ? 0 : 3))
+								_frames.Add(newFrame);
+								_waits.Add(0);
+
+								line = nextLine(lines);
+								line = line.Trim();
+								line = Regex.Replace(line, @"[ ]{2,}", @" ");
+
+								while (true)
 								{
-									line = nextLine (lines);
+									string[] toks = line.Split(' ');
+									if (toks[0] == "WAIT")
+									{
+										_waits[_frames.Count - 1] = int.Parse(toks[1]);
+									}
+									if (line == "ANIEND")
+									{
+										break;
+									}
+									else if (line.Length == 0 || line == "\n" || line == "\r" || !IsNumeric(toks[0]))
+									{
+										line = nextLine(lines);
+										line = line.Trim();
+										line = Regex.Replace(line, @"[ ]{2,}", @" ");
+									}
+									else
+									{
+										break;
+									}
 								}
 							}
-
-							_frames.Add (newFrame);
-							_waits.Add (0);
-
-							line = nextLine (lines);
-							line = line.Trim ();
-							line = Regex.Replace (line, @"[ ]{2,}", @" ");
-
-							while (true)
-							{
-								string[] toks = line.Split (' ');
-								if (toks [0] == "WAIT")
-								{
-									_waits [_frames.Count - 1] = int.Parse (toks [1]);
-								}
-								if (line == "ANIEND")
-								{
-									break;
-								}
-								else if (line.Length == 0 || line == "\n" || line == "\r" || !IsNumeric (toks [0]))
-								{
-									line = nextLine (lines);
-									line = line.Trim ();
-									line = Regex.Replace (line, @"[ ]{2,}", @" ");
-								}
-								else
-								{
-									break;
-								}
-							}
+							break;
 						}
-						break;
-					}
 				}
 
-				line = nextLine (lines);
+				line = nextLine(lines);
 			}
 
-			//Console.WriteLine("Success.");
+			this.loaded = true;
 		}
 
-		public bool isAbsolutePath (string p)
+		public bool isAbsolutePath(string p)
 		{
-			if (p.IndexOf (':') != -1)
+			if (p.IndexOf(':') != -1)
 			{
 				return true;
 			}
@@ -338,22 +339,22 @@ namespace OpenGraal.Common.Animations
 			return false;
 		}
 
-		public string MakePath (string p, string top)
+		public string MakePath(string p, string top)
 		{
-			return (isAbsolutePath (p)) ? p : top + "/" + p;
+			return (isAbsolutePath(p)) ? p : top + "/" + p;
 		}
 
-		public virtual void Draw (int x, int y, int dir, object targetWindow, bool dontIncrement = false)
-		{
-			// OVERRIDE THIS
-		}
-
-		public virtual void Draw (int x, int y, int dir, object targetWindow, object spriteBatch, bool dontIncrement = false)
+		public virtual void Draw(int x, int y, int dir, object targetWindow, bool dontIncrement = false)
 		{
 			// OVERRIDE THIS
 		}
 
-		public static System.Boolean IsNumeric (System.Object Expression)
+		public virtual void Draw(int x, int y, int dir, object targetWindow, object spriteBatch, bool dontIncrement = false)
+		{
+			// OVERRIDE THIS
+		}
+
+		public static System.Boolean IsNumeric(System.Object Expression)
 		{
 			if (Expression == null || Expression is DateTime)
 				return false;
@@ -364,9 +365,9 @@ namespace OpenGraal.Common.Animations
 			try
 			{
 				if (Expression is string)
-					Double.Parse (Expression as string);
+					Double.Parse(Expression as string);
 				else
-					Double.Parse (Expression.ToString ());
+					Double.Parse(Expression.ToString());
 				return true;
 			}
 			catch
@@ -378,6 +379,5 @@ namespace OpenGraal.Common.Animations
 		}
 
 		#endregion
-
 	}
 }

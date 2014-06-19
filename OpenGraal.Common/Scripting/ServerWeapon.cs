@@ -36,6 +36,9 @@ namespace OpenGraal.Common.Scripting
 			this.Name = WeaponName;
 			this.Image = WeaponImage;
 			this.Script = WeaponScript.Replace("\xa7", "\n");
+			this.Script = this.Script.Replace("ï¿½", "\n");
+			this.Script = this.Script.Replace("Â", "");
+			this.Script = this.Script.Replace("�", "\n");
 		}
 
 		/// <summary>
@@ -75,7 +78,10 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Constructor
 		/// </summary>
-		public ScriptWeapon() { }
+		public ScriptWeapon()
+		{
+		}
+
 		public ScriptWeapon(IRefObject Ref)
 		{
 			this.Ref = (ServerWeapon)Ref;

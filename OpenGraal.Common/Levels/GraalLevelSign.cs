@@ -8,11 +8,14 @@ namespace OpenGraal.Common.Levels
 	public class GraalLevelSign
 	{
 		#region Member Variables
+
 		private int _x, _y;
 		private string _text;
+
 		#endregion
 
 		#region Constructor / Destructor
+
 		public GraalLevelSign()
 		{
 		}
@@ -28,9 +31,11 @@ namespace OpenGraal.Common.Levels
 		{
 			//
 		}
+
 		#endregion
 
 		#region Get value functions
+
 		public int X
 		{
 			get
@@ -66,7 +71,7 @@ namespace OpenGraal.Common.Levels
 				this._text = value;
 			}
 		}
-		#endregion
 
+		#endregion
 	}
 }

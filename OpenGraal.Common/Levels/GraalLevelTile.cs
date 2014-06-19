@@ -12,11 +12,14 @@ namespace OpenGraal.Common.Levels
 	public class GraalLevelTile
 	{
 		#region Member Variables
+
 		private int _tileId, _tileType;
 		public int transparent_index = -2;
+
 		#endregion
 
 		#region Constructor / Destructor
+
 		public GraalLevelTile()
 		{
 			this._tileId = 0;
@@ -26,22 +29,26 @@ namespace OpenGraal.Common.Levels
 		{
 			// Do something
 		}
+
 		#endregion
 
 		#region Public functions
+
 		public int GetIndex()
 		{
 			return this._tileId;
 		}
-		
+
 		public void SetTile(int pTileId)
 		{
 			this._tileId = pTileId;
 			this._tileType = (this._tileType == 511 ? 1 : 0);
 		}
+
 		#endregion
 
 		#region Get value functions
+
 		public int TileId
 		{
 			get
@@ -53,6 +60,7 @@ namespace OpenGraal.Common.Levels
 				this._tileId = value;
 			}
 		}
+
 		public int TileType
 		{
 			get
@@ -64,6 +72,7 @@ namespace OpenGraal.Common.Levels
 				this._tileType = value;
 			}
 		}
+
 		public int Tilex
 		{
 			get
@@ -71,13 +80,15 @@ namespace OpenGraal.Common.Levels
 				return ((this.TileId / 512) * 16 + this.TileId % 16) * 16;
 			}
 		}
+
 		public int Tiley
 		{
 			get
 			{
 				return ((this.TileId % 512) / 16) * 16;
 			}
-		}	
+		}
+
 		#endregion
 	}
 }

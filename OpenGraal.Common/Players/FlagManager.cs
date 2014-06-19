@@ -12,8 +12,9 @@ namespace OpenGraal.Common.Players
 		/// </summary>
 		public Dictionary<string, string> FlagList = new Dictionary<string, string>();
 		public dSendFlag cFunction = null;
-		public delegate void dSendFlag(string key, string val);
-		
+
+		public delegate void dSendFlag(string key,string val);
+
 		/// <summary>
 		/// Constructor
 		/// </summary>

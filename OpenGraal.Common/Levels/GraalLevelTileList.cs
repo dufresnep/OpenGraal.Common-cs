@@ -11,23 +11,28 @@ namespace OpenGraal.Common.Levels
 	public class GraalLevelTileList : IEnumerable
 	{
 		#region Member Variables
+
 		/// <summary>
 		/// Tile-List
 		/// </summary>
 		protected Dictionary<int, GraalLevelTile> TileList = new Dictionary<int, GraalLevelTile>();
 		protected Int32 Position = -1;
+
 		#endregion
 
 		#region Constructor
+
 		/// <summary>
 		/// Constructor
 		/// </summary>
 		public GraalLevelTileList()
 		{
 		}
+
 		#endregion
 
 		#region Public functions
+
 		/// <summary>
 		/// Iterate Tilelist Manager
 		/// </summary>
@@ -154,6 +159,7 @@ namespace OpenGraal.Common.Levels
 		{
 			return 64;
 		}
+
 		#endregion
 	}
 }

@@ -8,11 +8,14 @@ namespace OpenGraal.Common.Levels
 	public class GraalLevelLink
 	{
 		#region Member Variables
+
 		private int _x, _y, _width, _height;
 		private string _destination, _newX, _newY;
+
 		#endregion
 
 		#region Constructor / Destructor
+
 		public GraalLevelLink()
 		{
 		}
@@ -32,9 +35,11 @@ namespace OpenGraal.Common.Levels
 		{
 			//
 		}
+
 		#endregion
 
 		#region Get value functions
+
 		public int X
 		{
 			get
@@ -46,6 +51,7 @@ namespace OpenGraal.Common.Levels
 				this._x = value;
 			}
 		}
+
 		public int Y
 		{
 			get
@@ -69,6 +75,7 @@ namespace OpenGraal.Common.Levels
 				this._width = value;
 			}
 		}
+
 		public int Height
 		{
 			get
@@ -92,6 +99,7 @@ namespace OpenGraal.Common.Levels
 				this._newX = value;
 			}
 		}
+
 		public string NewY
 		{
 			get
@@ -115,7 +123,7 @@ namespace OpenGraal.Common.Levels
 				this._destination = value;
 			}
 		}
-		#endregion
 
+		#endregion
 	}
 }

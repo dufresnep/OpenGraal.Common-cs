@@ -12,19 +12,13 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Colors
 		/// </summary>
-		static string[] AllColors = new string[]
-		{
-			"white", "yellow", "orange", "pink", "red",
-			"darkred","lightgreen", "green", "darkgreen", "lightblue",
-			"blue", "darkblue", "brown", "cynober", "purple",
-			"darkpurple", "lightgray", "gray", "black", "transparent"
-		};
-
+		static string[] AllColors = new string[] { "white", "yellow", "orange", "pink", "red", "darkred", "lightgreen", "green", "darkgreen", "lightblue", "blue", "darkblue", "brown", "cynober", "purple", "darkpurple", "lightgray", "gray", "black", "transparent" };
 		/// <summary>
 		/// Member Variables
 		/// </summary>
 		byte[] colors = new byte[5];
 		public dSendColors cFunction = null;
+
 		public delegate void dSendColors();
 
 		/// <summary>
@@ -54,7 +48,6 @@ namespace OpenGraal.Common.Players
 					cFunction();
 			}
 		}
-
 		/*
 		public string this[int key]
 		{
@@ -72,7 +65,6 @@ namespace OpenGraal.Common.Players
 			}
 		}
 		*/
-
 		/// <summary>
 		/// String -> Colors
 		/// </summary>
