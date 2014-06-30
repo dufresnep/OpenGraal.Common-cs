@@ -189,7 +189,7 @@ namespace OpenGraal.Common.Players
 		/// </summary>
 		public virtual void AdjustLevels()
 		{
-			throw new NotImplementedException("Requires override!");
+			//throw new NotImplementedException("Requires override!");
 		}
 
 		/// <summary>
@@ -967,7 +967,7 @@ namespace OpenGraal.Common.Players
 
 		public virtual void CurLevel(string levelname)
 		{
-			throw new NotImplementedException("Requires override!");
+			//throw new NotImplementedException("Requires override!");
 		}
 
 		/// <summary>

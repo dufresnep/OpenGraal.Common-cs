@@ -102,6 +102,7 @@ namespace OpenGraal.Common.Players
 						return Player.Value;
 					else
 						rc = Player.Value;
+					break;
 				}
 			}
 
