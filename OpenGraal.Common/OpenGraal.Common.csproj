@@ -55,9 +55,6 @@
     <Compile Include="Levels\GraalLevel.cs" />
     <Compile Include="Levels\GraalLevelSign.cs" />
     <Compile Include="Levels\GraalLevelTileList.cs" />
-    <Compile Include="Scripting\ExtensionMethods.cs" />
-    <Compile Include="Scripting\GameCompiler.cs" />
-    <Compile Include="Scripting\IRefObject.cs" />
     <Compile Include="Levels\GraalLevelTile.cs" />
     <Compile Include="Levels\GraalLevelNPC.cs" />
     <Compile Include="Levels\GraalMap.cs" />
@@ -67,14 +64,8 @@
     <Compile Include="Players\GraalPlayer.cs" />
     <Compile Include="Players\GraalPlayerList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Scripting\ScriptEvent.cs" />
-    <Compile Include="Scripting\ScriptObj.cs" />
-    <Compile Include="Scripting\ServerClass.cs" />
-    <Compile Include="Scripting\ServerWeapon.cs" />
     <Compile Include="Levels\TNPC.cs" />
-    <Compile Include="Animations\IGaniObj.cs" />
     <Compile Include="IFramework.cs" />
-    <Compile Include="Players\Interfaces\IPlayer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -88,12 +79,18 @@
   </Target>
   -->
   <ItemGroup>
+    <ProjectReference Include="..\..\..\opengraal.common.interfaces-cs\trunk\OpenGraal.Common.Interfaces\OpenGraal.Common.Interfaces.csproj">
+      <Project>{F35CB43B-DCA8-4283-900A-2923C7C67483}</Project>
+      <Name>OpenGraal.Common.Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\opengraal.common.scripting-cs\trunk\OpenGraal.Common.Scripting\OpenGraal.Common.Scripting.csproj">
+      <Project>{65B06A98-1CDD-4133-AC5D-55FE3424C0C6}</Project>
+      <Name>OpenGraal.Common.Scripting</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\opengraal.core-cs\trunk\OpenGraal.Core\OpenGraal.Core.csproj">
       <Project>{CC4AF8B5-BECF-4562-A0E5-94FBE0FBAB8F}</Project>
       <Name>OpenGraal.Core</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Players\Interfaces\" />
-  </ItemGroup>
+  <ItemGroup />
 </Project>

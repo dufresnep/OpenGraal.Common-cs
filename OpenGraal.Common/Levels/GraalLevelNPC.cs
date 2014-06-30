@@ -914,7 +914,7 @@ namespace OpenGraal.Common.Levels
 		/// <summary>
 		/// Library Function -> Find Player by Account
 		/// </summary>
-		public override GraalPlayer FindPlayer(string Account)
+		public IPlayer FindPlayer(string Account)
 		{
 			//throw new NotImplementedException("requires override!");
 			return Ref.Level.FindPlayer(Account);
