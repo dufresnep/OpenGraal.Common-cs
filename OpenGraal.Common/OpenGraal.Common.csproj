@@ -34,6 +34,10 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ClearScript, Version=5.3.11.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\opengraal.npcserver-cs\trunk\OpenGraal.NpcServer\bin\Debug\ClearScript.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -66,6 +70,15 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Levels\TNPC.cs" />
     <Compile Include="IFramework.cs" />
+    <Compile Include="Scripting\Class1.cs" />
+    <Compile Include="Scripting\ExtensionMethods.cs" />
+    <Compile Include="Scripting\GameCompiler.cs" />
+    <Compile Include="Scripting\IRefObject.cs" />
+    <Compile Include="Scripting\ScriptEvent.cs" />
+    <Compile Include="Scripting\ScriptObj.cs" />
+    <Compile Include="Scripting\ServerClass.cs" />
+    <Compile Include="Scripting\ServerWeapon.cs" />
+    <Compile Include="Scripting\ScriptLevelNpc.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
