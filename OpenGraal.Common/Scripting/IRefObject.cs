@@ -26,6 +26,8 @@ namespace OpenGraal.Common.Scripting
 		/// </summary>
 		public ScriptObj ScriptObject;
 		public String Asm;
+		public byte[] ClientSideScript;
+
 		public ScriptType Type;
 		public String Script;
 

@@ -4,6 +4,7 @@ using System.CodeDom.Compiler;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.CSharp;
 using OpenGraal;
 using OpenGraal.Core;
@@ -127,23 +128,49 @@ namespace OpenGraal.Common.Scripting
 			}
 			else
 				HandleErrors((ScriptObj.Type == IRefObject.ScriptType.WEAPON ? "weapon" : "levelnpc_") + ScriptObj.GetErrorText(), Results);
-			/*
+
 			//Clientside script
-			Assembly Asm2 = CompileScript(ScriptObj, out Results, Script[1], true);
-			if (Asm2 == null)
-				HandleErrors((ScriptObj.Type == IRefObject.ScriptType.WEAPON ? "weapon" : "levelnpc_") + ScriptObj.GetErrorText(), Results, true);
-			Asm2 = null;
-			*/ 
-			
+			if (Script[1].Trim() != "")
+			{
+				Assembly Asm2 = CompileScript(ScriptObj, out Results, Script[1], true);
+				if (Asm2 == null)
+					HandleErrors((ScriptObj.Type == IRefObject.ScriptType.WEAPON ? "weapon" : "levelnpc_") + ScriptObj.GetErrorText(), Results, true);
+				else
+				{
+
+					byte[] bytes;
+					using (MemoryStream stream = new MemoryStream())
+					{
+						BinaryFormatter formatter = new BinaryFormatter();
+						formatter.AssemblyFormat =
+	System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Full;
+						formatter.Serialize(stream, Results.CompiledAssembly);
+
+						bytes = stream.ToArray();
+					}
+					if (bytes != null)
+					{
+
+
+						Asm2 = null;
+						Asm2 = Assembly.Load(bytes);
+
+						this.RunScript(null, Asm2);
+						ScriptObj.ClientSideScript = bytes;
+						string test = "";
+						test += "" + (byte)1 + (byte)((ScriptWeapon)ScriptObj.ScriptObject).name.Length + ((ScriptWeapon)ScriptObj.ScriptObject).name;
+						foreach (byte b in ScriptObj.ClientSideScript)
+							test += b;
+						this.OutputError(test);
+					}
+				}
+			}
 		}
 
-		/// <summary>
-		/// Compile Script -> Return Assembly
-		/// </summary>
 		public Assembly CompileScript(IRefObject ScriptObject, out CompilerResults Result, String script, bool ClientSide = false)
 		{
 			String ClassName, PrefixName, AssemblyName = "";
-			
+
 			switch (ScriptObject.Type)
 			{
 				case IRefObject.ScriptType.WEAPON:
@@ -169,11 +196,8 @@ namespace OpenGraal.Common.Scripting
 			// Setup our options
 			CompilerParameters options = new CompilerParameters();
 			options.GenerateExecutable = false;
-
-			if (ClientSide || ScriptObject.Type == IRefObject.ScriptType.CLASS)
-				options.GenerateInMemory = false;
-			else
-				options.GenerateInMemory = true;
+			options.GenerateInMemory = true;
+			//options.
 
 			if (!ClientSide)
 				options.ReferencedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
@@ -181,8 +205,10 @@ namespace OpenGraal.Common.Scripting
 			options.ReferencedAssemblies.Add("System.Core.dll");
 			options.ReferencedAssemblies.Add("OpenGraal.Core.dll");
 			options.ReferencedAssemblies.Add("OpenGraal.Common.dll");
+			options.ReferencedAssemblies.Add("OpenGraal.Common.Interfaces.dll");
 			options.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
 			options.ReferencedAssemblies.Add("MonoGame.Framework.dll");
+			/*
 			if (this.GetClasses() != null)
 			{
 				foreach (KeyValuePair<string, ServerClass> npcClass in this.GetClasses())
@@ -191,22 +217,20 @@ namespace OpenGraal.Common.Scripting
 						options.ReferencedAssemblies.Add(npcClass.Value.Asm);
 				}
 			}
+			*/
 
 			//options.ReferencedAssemblies.
 			options.CompilerOptions = "/optimize";
 
 			if (AssemblyName == "")
 				AssemblyName = PrefixName + NextId[(int)ScriptObject.Type];
-			
-			if (ClientSide)
-				options.OutputAssembly = AssemblyName + "_ClientSide.dll";
 
 			if (ScriptObject.Type == IRefObject.ScriptType.CLASS)
 				options.OutputAssembly = AssemblyName;
-			
+
 			// Compile our code
 			CSharpCodeProvider csProvider = new Microsoft.CSharp.CSharpCodeProvider();
-			
+
 			string usingNamespace = "";
 			usingNamespace = "using Microsoft.Xna.Framework.Input;";
 			string[] CompileData = new string[1];
@@ -230,9 +254,6 @@ namespace OpenGraal.Common.Scripting
 			return (Result.Errors.HasErrors ? null : Result.CompiledAssembly);
 		}
 
-		/// <summary>
-		/// Send Errors to NC Chat
-		/// </summary>
 		public void HandleErrors(String Name, CompilerResults Results, bool ClientSide = false)
 		{
 			if (Results != null)
@@ -259,9 +280,6 @@ namespace OpenGraal.Common.Scripting
 			Console.WriteLine(errorText);
 		}
 
-		/// <summary>
-		/// Parse Joins and return new script
-		/// </summary>
 		public String[] ParseJoins(String Script)
 		{
 			MatchCollection col = Regex.Matches(Script, "join\\(\"(?<class>[A-Za-z0-9]*)\"\\);", RegexOptions.IgnoreCase);
@@ -307,7 +325,7 @@ namespace OpenGraal.Common.Scripting
 			throw new NotImplementedException();
 		}
 
-		public virtual Dictionary<string,ServerClass> GetClasses()
+		public virtual Dictionary<string, ServerClass> GetClasses()
 		{
 			//throw new NotImplementedException();
 			return null;
@@ -323,7 +341,7 @@ namespace OpenGraal.Common.Scripting
 			{
 				if (!type.IsSubclassOf(typeof(ScriptObj)))
 				{
-					//Console.WriteLine("Is not scriptobj");
+					Console.WriteLine("Is not scriptobj");
 					continue;
 				} //else
 				//Console.WriteLine("Is scriptobj");
@@ -334,14 +352,14 @@ namespace OpenGraal.Common.Scripting
 
 					ScriptObj obj = InvokeConstruct(Reference, constructor); //GSConn
 					obj.RunEvents();
-					//Console.WriteLine("Script Constructed");
+					Console.WriteLine("Script Constructed");
 					return obj;
 				}
 				else
 					Console.WriteLine("error3");
 			}
 
-			//Console.WriteLine("No object created, return null");
+			Console.WriteLine("No object created, return null");
 
 			// No object created, return null
 			return null;

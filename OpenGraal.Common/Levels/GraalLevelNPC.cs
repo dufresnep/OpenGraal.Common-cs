@@ -7,11 +7,126 @@ using OpenGraal.Common.Scripting;
 using OpenGraal.Common.Players;
 using OpenGraal.Common.Animations;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 
 namespace OpenGraal.Common.Levels
 {
-	public class GraalLevelNPC : IRefObject, IGaniObj
+	[Serializable]
+	public class GraalLevelNPC : IRefObject, IGaniObj, ISerializable
 	{
+
+		 // Implement this method to serialize data. The method is called  
+		// on serialization. 
+		public void GetObjectData(SerializationInfo info, StreamingContext context)
+		{
+			// Use the AddValue method to specify serialized values.
+			info.AddValue("CompileScript", CompileScript, typeof(bool));
+			info.AddValue("npcserver",npcserver, typeof(bool));
+
+			// BYTES
+			info.AddValue("GMapX",GMapX, typeof(byte));
+			info.AddValue("GMapY",GMapY, typeof(byte));
+
+			// SBYTES
+			info.AddValue("BlockFlags",BlockFlags, typeof(sbyte));
+			info.AddValue("VisFlags",VisFlags, typeof(sbyte));
+
+			// DOUBLES
+			info.AddValue("Hearts",Hearts, typeof(double));
+
+			// INTS
+			info.AddValue("Ap",Ap, typeof(int));
+			info.AddValue("Arrows",Arrows, typeof(int));
+			info.AddValue("Bombs",Bombs, typeof(int));
+			info.AddValue("BombPower",BombPower, typeof(int));
+			info.AddValue("_dir",_dir, typeof(int));
+			info.AddValue("FullHearts",FullHearts, typeof(int));
+			info.AddValue("GlovePower",GlovePower, typeof(int));
+			info.AddValue("Gralats",Gralats, typeof(int));
+			info.AddValue("Id",Id, typeof(int));
+			info.AddValue("_pixelX",_pixelX, typeof(int));
+			info.AddValue("_pixelY",_pixelY, typeof(int));
+			info.AddValue("ShieldPower",ShieldPower, typeof(int));
+			info.AddValue("SwordPower",SwordPower, typeof(int));
+			info.AddValue("Width",Width, typeof(int));
+			info.AddValue("Height",Height, typeof(int));
+
+			// STRINGS
+			info.AddValue("Animation",Animation, typeof(string));
+			info.AddValue("_bodyImage",_bodyImage, typeof(string));
+			info.AddValue("Chat",Chat, typeof(string));
+			info.AddValue("_headImage",_headImage, typeof(string));
+			info.AddValue("_swordImage",_swordImage, typeof(string));
+			info.AddValue("_shieldImage",_shieldImage, typeof(string));
+			info.AddValue("Image",Image, typeof(string));
+			info.AddValue("Nickname",Nickname, typeof(string));
+			info.AddValue("prevGani",prevGani, typeof(string));
+
+			// MISC
+			info.AddValue("_currentGani",_currentGani, typeof(Animations.Animation));
+			info.AddValue("ImagePart",ImagePart, typeof(CString));
+			info.AddValue("Level",Level, typeof(GraalLevel));
+			info.AddValue("Save",Save, typeof(SaveIndex));
+			info.AddValue("Server",Server, typeof(CSocket));
+		}
+
+		// The special constructor is used to deserialize values. 
+		public GraalLevelNPC(SerializationInfo info, StreamingContext context)
+			: base(ScriptType.LEVELNPC)
+		{
+			// Reset the property value using the GetValue method.
+
+			// BOOLEANS
+			CompileScript = (bool)info.GetValue("CompileScript", typeof(bool));
+			npcserver = (bool)info.GetValue("npcserver", typeof(bool));
+
+			// BYTES
+			GMapX = (byte)info.GetValue("GMapX", typeof(byte));
+			GMapY = (byte)info.GetValue("GMapY", typeof(byte));
+
+			// SBYTES
+			BlockFlags = (sbyte)info.GetValue("BlockFlags", typeof(sbyte));
+			VisFlags = (sbyte)info.GetValue("VisFlags", typeof(sbyte));
+
+			// DOUBLES
+			Hearts = (double)info.GetValue("Hearts", typeof(double));
+
+			// INTS
+			Ap = (int)info.GetValue("Ap", typeof(int));
+			Arrows = (int)info.GetValue("Arrows", typeof(int));
+			Bombs = (int)info.GetValue("Bombs", typeof(int));
+			BombPower = (int)info.GetValue("BombPower", typeof(int));
+			_dir = (int)info.GetValue("_dir", typeof(int));
+			FullHearts = (int)info.GetValue("FullHearts", typeof(int));
+			GlovePower = (int)info.GetValue("GlovePower", typeof(int));
+			Gralats = (int)info.GetValue("Gralats", typeof(int));
+			Id = (int)info.GetValue("Id", typeof(int));
+			_pixelX = (int)info.GetValue("_pixelX", typeof(int));
+			_pixelY = (int)info.GetValue("_pixelY", typeof(int));
+			ShieldPower = (int)info.GetValue("ShieldPower", typeof(int));
+			SwordPower = (int)info.GetValue("SwordPower", typeof(int));
+			Width = (int)info.GetValue("Width", typeof(int));
+			Height = (int)info.GetValue("Height", typeof(int));
+
+			// STRINGS
+			Animation = (string)info.GetValue("Animation", typeof(string));
+			_bodyImage = (string)info.GetValue("_bodyImage", typeof(string));
+			Chat = (string)info.GetValue("Chat", typeof(string));
+			_headImage = (string)info.GetValue("_headImage", typeof(string));
+			_swordImage = (string)info.GetValue("_swordImage", typeof(string));
+			_shieldImage = (string)info.GetValue("_shieldImage", typeof(string));
+			Image = (string)info.GetValue("Image", typeof(string));
+			Nickname = (string)info.GetValue("Nickname", typeof(string));
+			prevGani = (string)info.GetValue("prevGani", typeof(string));
+
+			// MISC
+			_currentGani = (Animations.Animation)info.GetValue("_currentGani", typeof(Animations.Animation));
+			ImagePart = (CString)info.GetValue("ImagePart", typeof(CString));
+			Level = (GraalLevel)info.GetValue("Level", typeof(GraalLevel));
+			Save = (SaveIndex)info.GetValue("Save", typeof(SaveIndex));
+			Server = (CSocket)info.GetValue("Server", typeof(CSocket));
+		}
+		#region enums
 		/// <summary>
 		/// NPC Properties Enum
 		/// </summary>
@@ -162,7 +277,7 @@ namespace OpenGraal.Common.Levels
 			PLAYERWEAPONDEL = 2,
 			GMAPLIST = 3,
 		};
-
+		#endregion
 		public bool CompileScript = false;
 		public bool npcserver = false;
 		/// <summary>
@@ -258,9 +373,6 @@ namespace OpenGraal.Common.Levels
 			return new StringBuilder(Level.name).Append(" (").Append(PixelX / 16).Append(',').Append(PixelY / 16).Append(')').ToString();
 		}
 
-		/// <summary>
-		/// Constructor
-		/// </summary>
 		public GraalLevelNPC(GraalLevel Level, int Id)
 			: base(ScriptType.LEVELNPC)
 		{
