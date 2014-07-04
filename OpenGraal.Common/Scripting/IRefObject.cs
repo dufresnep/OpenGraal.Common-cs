@@ -26,6 +26,8 @@ namespace OpenGraal.Common.Scripting
 		/// </summary>
 		public ScriptObj ScriptObject;
 		public Microsoft.ClearScript.V8.V8ScriptEngine scriptobj;
+		public String V8ScriptName;
+		public String AttachToGlobalScriptInstance;
 		public ScriptType Type;
 		public String Script;
 

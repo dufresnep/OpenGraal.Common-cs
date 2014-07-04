@@ -109,28 +109,18 @@ namespace OpenGraal.Common.Scripting
 			Type type = this.GetType();
 			try
 			{
-				
+				/*
+				if (V8Instance.hasMethod(V8Instance.GetInstance().Script, ScriptObj.V8ScriptName, 1))
+				{
+					dynamic test = null;
+					if (this. == IRefObject.ScriptType.WEAPON)
+						test = V8Instance.InvokeFunction(V8Instance.GetInstance(), ScriptObj.V8ScriptName, new object[] { new ScriptWeapon(ScriptObj) });
+					else if (ScriptObj.Type == IRefObject.ScriptType.LEVELNPC)
+						test = V8Instance.InvokeFunction(V8Instance.GetInstance(), ScriptObj.V8ScriptName, new object[] { new ScriptLevelNpc(ScriptObj) });
+					test.onCreated();
 
-				//scriptobj.Script.Event(Args);
-				//V8ScriptEngine engine = new V8ScriptEngine();
-				//engine.Evaluate();
-				//if (m != null)
-
-				V8Instance.GetInstance().AddHostObject("obj", HostItemFlags.GlobalMembers, this);
-
-
-				V8Instance.GetInstance().AddHostType("Console", typeof(Console));
-				V8Instance.GetInstance().Evaluate(this.scriptobj);
-				//V8Instance.GetInstance().Script.
-				dynamic hasMethod = V8Instance.GetInstance().Evaluate(@"
-					(function (obj, name, paramCount) {
-						return (typeof obj[name] === 'function') && (obj[name].length === paramCount);
-					})
-				");
-
-				if (hasMethod(V8Instance.GetInstance(), Event, Args.Length))
-					V8Instance.GetInstance().Script.Event(Args);
-				//V8Instance.GetInstance().
+				}
+				*/
 
 			}
 			catch (Exception e)

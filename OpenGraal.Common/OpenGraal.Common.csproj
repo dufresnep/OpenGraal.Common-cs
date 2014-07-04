@@ -71,6 +71,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Levels\TNPC.cs" />
     <Compile Include="IFramework.cs" />
+    <Compile Include="Scripting\V8EvaluationInstance.cs" />
+    <Compile Include="Scripting\V8Instance.cs" />
     <Compile Include="Scripting\ExtensionMethods.cs" />
     <Compile Include="Scripting\GameCompiler.cs" />
     <Compile Include="Scripting\IRefObject.cs" />
