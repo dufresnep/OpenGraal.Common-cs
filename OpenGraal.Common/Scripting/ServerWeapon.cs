@@ -3,7 +3,6 @@ using System.Text;
 using OpenGraal;
 using OpenGraal.Core;
 using OpenGraal.Common;
-using OpenGraal.Common.Players;
 
 namespace OpenGraal.Common.Scripting
 {

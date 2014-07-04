@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using OpenGraal.Common.Players;
 using OpenGraal.Core;
+using Microsoft.ClearScript;
+using Microsoft.ClearScript.V8;
 using System.Reflection;
 
 namespace OpenGraal.Common.Scripting
@@ -16,6 +18,18 @@ namespace OpenGraal.Common.Scripting
 		// -- Member Variables -- //
 		static public Random rand = new Random();
 		public List<ScriptEvent> ScriptEvents = new List<ScriptEvent>();
+		private V8Script _scriptobj;
+		public V8Script scriptobj
+		{
+			get 
+			{
+				return this._scriptobj;
+			}
+			set
+			{
+				this._scriptobj = value;
+			}
+		}
 		private  CSocket _server;
 		private Dictionary<String, ServerWeapon> _weaponList;
 
@@ -51,7 +65,7 @@ namespace OpenGraal.Common.Scripting
 				_nwTime = value;
 			}
 		}
-
+		/*
 		private GraalPlayerList _playerManager = null;
 
 		public GraalPlayerList PlayerManager
@@ -65,7 +79,7 @@ namespace OpenGraal.Common.Scripting
 				_playerManager = value;
 			}
 		}
-
+		*/
 		/// <summary>
 		/// Constructor
 		/// </summary>
@@ -78,9 +92,9 @@ namespace OpenGraal.Common.Scripting
 			this.Server = Server;
 		}
 
-		public ScriptObj(GraalPlayerList PL, int NWTime)
+		public ScriptObj(object PL, int NWTime)
 		{
-			this.PlayerManager = PL;
+			//this.PlayerManager = PL;
 
 
 
@@ -95,12 +109,33 @@ namespace OpenGraal.Common.Scripting
 			Type type = this.GetType();
 			try
 			{
-				MethodInfo m = type.GetMethod(Event);
-				if (m != null)
-					type.InvokeMember(Event, BindingFlags.InvokeMethod, null, this, Args);
+				
+
+				//scriptobj.Script.Event(Args);
+				//V8ScriptEngine engine = new V8ScriptEngine();
+				//engine.Evaluate();
+				//if (m != null)
+
+				V8Instance.GetInstance().AddHostObject("obj", HostItemFlags.GlobalMembers, this);
+
+
+				V8Instance.GetInstance().AddHostType("Console", typeof(Console));
+				V8Instance.GetInstance().Evaluate(this.scriptobj);
+				//V8Instance.GetInstance().Script.
+				dynamic hasMethod = V8Instance.GetInstance().Evaluate(@"
+					(function (obj, name, paramCount) {
+						return (typeof obj[name] === 'function') && (obj[name].length === paramCount);
+					})
+				");
+
+				if (hasMethod(V8Instance.GetInstance(), Event, Args.Length))
+					V8Instance.GetInstance().Script.Event(Args);
+				//V8Instance.GetInstance().
+
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				//Console.WriteLine(e.Message);
 			}
 		}
 
@@ -150,20 +185,23 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Library Function -> Find Player by Account
 		/// </summary>
+		/*
 		public virtual GraalPlayer FindPlayer(string Account)
 		{
 			throw new NotImplementedException("requires override!");
 			//return this.PlayerManager.FindPlayer (Account);
 		}
-
+		*/
 		/// <summary>
 		/// Library Function -> Find Player by Id
 		/// </summary>
+		
+		/*
 		public GraalPlayer FindPlayer(short Id)
 		{
 			return this.PlayerManager.FindPlayer(Id);
 		}
-
+		*/
 		/// <summary>
 		/// Library Function -> MD5 String
 		/// </summary>
@@ -215,7 +253,7 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Library Function -> Trigger Event
 		/// </summary>
-		public void trigger(GraalPlayer player, string Event, string[] args)
+		public void trigger(IPlayer player, string Event, string[] args)
 		{
 			this.Call(Event, new object[] { player, args });
 		}
@@ -252,17 +290,18 @@ namespace OpenGraal.Common.Scripting
 		/// </summary>
 		public void SendRCChat(String Message)
 		{
-			this.Server.SendPacket(new CString() + (byte)Levels.GraalLevelNPC.PacketOut.RCCHAT + Message);
+			this.Server.SendPacket(new CString() + (byte)79 + Message);
 		}
 
 		/// <summary>
 		/// Retrieve Players-Array
 		/// </summary>
+		/*
 		public GraalPlayerList allplayers
 		{
 			get { return this.PlayerManager; }
 		}
-
+		*/
 		/// <summary>
 		/// New World Time
 		/// </summary>

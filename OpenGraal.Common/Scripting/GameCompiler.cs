@@ -4,14 +4,12 @@ using System.CodeDom.Compiler;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.CSharp;
 using OpenGraal;
 using OpenGraal.Core;
-using OpenGraal.Common;
-using OpenGraal.Common.Players;
-using OpenGraal.Common.Levels;
-using OpenGraal.Common.Scripting;
+using Microsoft.ClearScript;
+using Microsoft.ClearScript.V8;
+
 using System.IO;
 
 namespace OpenGraal.Common.Scripting
@@ -39,16 +37,53 @@ namespace OpenGraal.Common.Scripting
 			}
 		}
 
+		public void RunnerThread()
+		{
+			if (RunList2.Count > 0)
+			{
+				while (RunList2.Count > 0)
+				{
+					// Grab from Queue
+					KeyValuePair<IRefObject, KeyValuePair<string, object[]>> cur;
+					lock (RunList2)
+					{
+						try
+						{
+							cur = RunList2.Dequeue();
+						}
+						catch (Exception e)
+						{
+							cur = new KeyValuePair<IRefObject, KeyValuePair<string, object[]>>(null, new KeyValuePair<string,object[]>(null,null));
+						}
+					}
+					if (cur.Key != null)
+					{
+						if (cur.Key.ScriptObject != null)
+						{
+							if (cur.Value.Key == "RunEvents")
+								cur.Key.ScriptObject.RunEvents();
+							else
+								cur.Key.Call(cur.Value.Key, cur.Value.Value);
+						}
+					}
+
+				}
+			}
+		}
 		/// <summary>
 		/// Member Variables
 		/// </summary>
 		protected List<CSocket> _sockets;
 		protected Int32[] NextId = new Int32[] { 0, 0, 0 };
 		protected Int32 ActiveCompilers = 0;
-		protected Thread[] Compilers;
+		protected Int32 ActiveRunners = 0;
+		protected Thread[] Compilers, Runners;
+
+		
 		protected Queue<IRefObject> CompileList = new Queue<IRefObject>();
 		//protected IFramework Server;
 		public Queue<IRefObject> RunList = new Queue<IRefObject>();
+		public Queue<KeyValuePair<IRefObject, KeyValuePair<string, object[]>>> RunList2 = new Queue<KeyValuePair<IRefObject, KeyValuePair<string, object[]>>>();
 
 		/// <summary>
 		/// Constructor -> Create Compiler, pass NPCServer reference
@@ -59,6 +94,7 @@ namespace OpenGraal.Common.Scripting
 
 			// Two compilers / processor
 			Compilers = new Thread[Environment.ProcessorCount * 4];
+			Runners = new Thread[Environment.ProcessorCount * 4];
 		}
 
 		/// <summary>
@@ -94,6 +130,36 @@ namespace OpenGraal.Common.Scripting
 			}
 		}
 
+		public void ManageRunners()
+		{
+			// No scripts to compile, or all compilers are running
+			if (RunList2.Count == ActiveRunners || (RunList2.Count > ActiveRunners && ActiveRunners == Runners.Length))
+				return;
+
+			// Iterate compilers
+			for (int i = 0; i < Runners.Length; i++)
+			{
+				// Remove Compilers
+				if (Runners[i] != null)
+				{
+					if (!Runners[i].IsAlive)
+					{
+						ActiveRunners--;
+						Runners[i] = null;
+					}
+				}
+
+				// No need to create another compiler, continue
+				if (RunList2.Count > i && Runners[i] == null)
+				{
+					Runners[i] = new Thread(RunnerThread);
+					Runners[i].IsBackground = true;
+					Runners[i].Start();
+					ActiveRunners++;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Add to Compile List
 		/// </summary>
@@ -103,74 +169,73 @@ namespace OpenGraal.Common.Scripting
 				CompileList.Enqueue(ScriptObj);
 		}
 
+		public void RunnerAdd(KeyValuePair<IRefObject,KeyValuePair<string,object[]>> ScriptObj)
+		{
+			lock (RunList2)
+				RunList2.Enqueue(ScriptObj);
+		}
 		/// <summary>
 		/// Compile & Execute -> Script
 		/// </summary>
 		/// <returns></returns>
 		public void Compile(IRefObject ScriptObj)
 		{
-			CompilerResults Results;
+			//CompilerResults Results;
 			String[] Script = ParseJoins(ScriptObj.Script);
-
+			V8Script scrpt = null;
 			//Serverside script
-			Assembly Asm = CompileScript(ScriptObj, out Results, Script[0]);
-
-			if (Asm != null)
+			//Script[0] = Script[0].Replace('\n', ' ');
+			try
 			{
+
+				if (Script[0].Trim().Length != 0)
+					scrpt = V8Instance.GetInstance().Compile(Script[0]);
+
+			//engine.
+			//var result = engine.Evaluate(Asm);
+			NextId[(int)ScriptObj.Type]++;
+			//Assembly Asm = CompileScript(ScriptObj, out Results, Script[0]);
+
+			if (scrpt != null)
+			{
+				//ScriptObj.scriptobj = engine;
 				if (ScriptObj.Type != IRefObject.ScriptType.CLASS)
-					ScriptObj.ScriptObject = this.RunScript(ScriptObj, Asm);
+				{
+					ScriptObj.ScriptObject = this.RunScript(ScriptObj, scrpt);
+					//ScriptObj.Call("onCreated",null);
+				}
 				else
 				{
-					ScriptObj.Asm = Results.PathToAssembly;
-					Results = null;
-					Asm = null;
+					//ScriptObj.Asm = Results.PathToAssembly;
+					//Results = null;
+					//Asm = null;
 				}
-			}
-			else
-				HandleErrors((ScriptObj.Type == IRefObject.ScriptType.WEAPON ? "weapon" : "levelnpc_") + ScriptObj.GetErrorText(), Results);
 
-			//Clientside script
-			if (Script[1].Trim() != "")
+				
+			}
+			}
+			catch (ScriptEngineException e)
 			{
-				Assembly Asm2 = CompileScript(ScriptObj, out Results, Script[1], true);
-				if (Asm2 == null)
-					HandleErrors((ScriptObj.Type == IRefObject.ScriptType.WEAPON ? "weapon" : "levelnpc_") + ScriptObj.GetErrorText(), Results, true);
-				else
-				{
-
-					byte[] bytes;
-					using (MemoryStream stream = new MemoryStream())
-					{
-						BinaryFormatter formatter = new BinaryFormatter();
-						formatter.AssemblyFormat =
-	System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Full;
-						formatter.Serialize(stream, Results.CompiledAssembly);
-
-						bytes = stream.ToArray();
-					}
-					if (bytes != null)
-					{
-
-
-						Asm2 = null;
-						Asm2 = Assembly.Load(bytes);
-
-						this.RunScript(null, Asm2);
-						ScriptObj.ClientSideScript = bytes;
-						string test = "";
-						test += "" + (byte)1 + (byte)((ScriptWeapon)ScriptObj.ScriptObject).name.Length + ((ScriptWeapon)ScriptObj.ScriptObject).name;
-						foreach (byte b in ScriptObj.ClientSideScript)
-							test += b;
-						this.OutputError(test);
-					}
-				}
+				HandleErrors((ScriptObj.Type == IRefObject.ScriptType.WEAPON ? "weapon" : "levelnpc_") + ScriptObj.GetErrorText(), e.ErrorDetails.Replace('\n',' '));
 			}
+			/*
+			//Clientside script
+			Assembly Asm2 = CompileScript(ScriptObj, out Results, Script[1], true);
+			if (Asm2 == null)
+				HandleErrors((ScriptObj.Type == IRefObject.ScriptType.WEAPON ? "weapon" : "levelnpc_") + ScriptObj.GetErrorText(), Results, true);
+			Asm2 = null;
+			*/ 
+			
 		}
 
+		/// <summary>
+		/// Compile Script -> Return Assembly -- Deprecated.
+		/// </summary>
+		/*
 		public Assembly CompileScript(IRefObject ScriptObject, out CompilerResults Result, String script, bool ClientSide = false)
 		{
 			String ClassName, PrefixName, AssemblyName = "";
-
+			
 			switch (ScriptObject.Type)
 			{
 				case IRefObject.ScriptType.WEAPON:
@@ -196,8 +261,11 @@ namespace OpenGraal.Common.Scripting
 			// Setup our options
 			CompilerParameters options = new CompilerParameters();
 			options.GenerateExecutable = false;
-			options.GenerateInMemory = true;
-			//options.
+
+			if (ClientSide || ScriptObject.Type == IRefObject.ScriptType.CLASS)
+				options.GenerateInMemory = false;
+			else
+				options.GenerateInMemory = true;
 
 			if (!ClientSide)
 				options.ReferencedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
@@ -205,10 +273,8 @@ namespace OpenGraal.Common.Scripting
 			options.ReferencedAssemblies.Add("System.Core.dll");
 			options.ReferencedAssemblies.Add("OpenGraal.Core.dll");
 			options.ReferencedAssemblies.Add("OpenGraal.Common.dll");
-			options.ReferencedAssemblies.Add("OpenGraal.Common.Interfaces.dll");
 			options.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
 			options.ReferencedAssemblies.Add("MonoGame.Framework.dll");
-			/*
 			if (this.GetClasses() != null)
 			{
 				foreach (KeyValuePair<string, ServerClass> npcClass in this.GetClasses())
@@ -217,20 +283,22 @@ namespace OpenGraal.Common.Scripting
 						options.ReferencedAssemblies.Add(npcClass.Value.Asm);
 				}
 			}
-			*/
 
 			//options.ReferencedAssemblies.
 			options.CompilerOptions = "/optimize";
 
 			if (AssemblyName == "")
 				AssemblyName = PrefixName + NextId[(int)ScriptObject.Type];
+			
+			if (ClientSide)
+				options.OutputAssembly = AssemblyName + "_ClientSide.dll";
 
 			if (ScriptObject.Type == IRefObject.ScriptType.CLASS)
 				options.OutputAssembly = AssemblyName;
-
+			
 			// Compile our code
 			CSharpCodeProvider csProvider = new Microsoft.CSharp.CSharpCodeProvider();
-
+			
 			string usingNamespace = "";
 			usingNamespace = "using Microsoft.Xna.Framework.Input;";
 			string[] CompileData = new string[1];
@@ -253,19 +321,22 @@ namespace OpenGraal.Common.Scripting
 			NextId[(int)ScriptObject.Type]++;
 			return (Result.Errors.HasErrors ? null : Result.CompiledAssembly);
 		}
-
-		public void HandleErrors(String Name, CompilerResults Results, bool ClientSide = false)
+		*/
+		/// <summary>
+		/// Send Errors to NC Chat
+		/// </summary>
+		public void HandleErrors(String Name, string Results, bool ClientSide = false)
 		{
 			if (Results != null)
 			{
-				if (Results.Errors.HasErrors)
+				//if (Results.Errors.HasErrors)
 				{
 					if (ClientSide)
 						this.OutputError("//#CLIENTSIDE:");
 					this.OutputError("Script compiler output for " + Name + ":");
-					foreach (CompilerError CompErr in Results.Errors)
+					//foreach (CompilerError CompErr in Results.Errors)
 					{
-						this.OutputError("error: " + CompErr.ErrorText + " at line " + CompErr.Line);
+						this.OutputError("error: " + Results);
 					}
 				}
 			}
@@ -280,6 +351,9 @@ namespace OpenGraal.Common.Scripting
 			Console.WriteLine(errorText);
 		}
 
+		/// <summary>
+		/// Parse Joins and return new script
+		/// </summary>
 		public String[] ParseJoins(String Script)
 		{
 			MatchCollection col = Regex.Matches(Script, "join\\(\"(?<class>[A-Za-z0-9]*)\"\\);", RegexOptions.IgnoreCase);
@@ -325,7 +399,7 @@ namespace OpenGraal.Common.Scripting
 			throw new NotImplementedException();
 		}
 
-		public virtual Dictionary<string, ServerClass> GetClasses()
+		public virtual Dictionary<string,ServerClass> GetClasses()
 		{
 			//throw new NotImplementedException();
 			return null;
@@ -334,40 +408,57 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Run Script -> Return Object
 		/// </summary>
-		public ScriptObj RunScript(IRefObject Reference, Assembly Script)
+		public ScriptObj RunScript(IRefObject Reference,V8Script script)
 		{
-			Type[] types = Script.GetTypes();
-			foreach (Type type in types)
+			//Type[] types = Script.GetTypes();
+			
+				//foreach (Type type in types)
 			{
+				/*
 				if (!type.IsSubclassOf(typeof(ScriptObj)))
 				{
-					Console.WriteLine("Is not scriptobj");
+					//Console.WriteLine("Is not scriptobj");
 					continue;
 				} //else
+				 */
 				//Console.WriteLine("Is scriptobj");
 
-				ConstructorInfo constructor = type.GetConstructor(new Type[] { typeof(CSocket), typeof(IRefObject) });
-				if (constructor != null && constructor.IsPublic)
+				//ConstructorInfo constructor = type.GetConstructor(new Type[] { typeof(CSocket), typeof(IRefObject) });
+				//if (constructor != null && constructor.IsPublic)
 				{
+					ScriptObj obj = null;
+					
+						obj = (ScriptObj)InvokeConstruct(Reference); //GSConn
+					//else if (Reference.Type == IRefObject.ScriptType.LEVELNPC)
+					//	obj = (ScriptObj)(new ScriptLevelNpc(Reference));
+		
 
-					ScriptObj obj = InvokeConstruct(Reference, constructor); //GSConn
-					obj.RunEvents();
-					Console.WriteLine("Script Constructed");
+					obj.scriptobj = script;
+					
+					if (obj != null)
+						obj.RunEvents();
+					//Console.WriteLine("Script Constructed");
 					return obj;
 				}
-				else
-					Console.WriteLine("error3");
+				//else
+				//	Console.WriteLine("error3");
 			}
 
-			Console.WriteLine("No object created, return null");
+			//Console.WriteLine("No object created, return null");
 
 			// No object created, return null
 			return null;
 		}
 
-		public virtual ScriptObj InvokeConstruct(IRefObject Reference, ConstructorInfo constructor)
+		public virtual ScriptObj InvokeConstruct(IRefObject Reference)
 		{
-			ScriptObj obj = (ScriptObj)constructor.Invoke(new object[] { null, Reference });
+			ScriptObj obj = null;
+
+			if (Reference.Type == IRefObject.ScriptType.WEAPON)
+				obj = (ScriptObj)(new ScriptWeapon(Reference));// (ScriptObj)Reference;//
+			else if (Reference.Type == IRefObject.ScriptType.LEVELNPC)
+				obj = (ScriptObj)(new ScriptLevelNpc(Reference));
+
 			return obj;
 		}
 	}

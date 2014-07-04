@@ -25,9 +25,7 @@ namespace OpenGraal.Common.Scripting
 		/// Member Variables
 		/// </summary>
 		public ScriptObj ScriptObject;
-		public String Asm;
-		public byte[] ClientSideScript;
-
+		public Microsoft.ClearScript.V8.V8ScriptEngine scriptobj;
 		public ScriptType Type;
 		public String Script;
 
