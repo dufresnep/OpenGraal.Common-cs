@@ -17,7 +17,7 @@ namespace OpenGraal.Common.Scripting
 			if (_instance == null)
 			{
 				_instance = new V8ScriptEngine();
-				_instance.AddHostObject("theEngine", _instance);
+				_instance.AddHostType("Console", typeof(Console));
 			}
 
 			return _instance;
@@ -28,14 +28,34 @@ namespace OpenGraal.Common.Scripting
 			//
 		}
 		*/
-		public static object InvokeFunction(string name, object[] args)
+		public static object InvokeFunction(ScriptEngine engine, object script, string name, object[] args)
 		{
 			var host = new HostFunctions();
-			((IScriptableObject)host).OnExposedToScriptCode(V8Instance.GetInstance());
-			var del = (Delegate)host.func<object>(args.Length, V8Instance.GetInstance().Script[name]);
+			((IScriptableObject)host).OnExposedToScriptCode(engine);
+			int argsLength;
+
+			if (args != null)
+				argsLength = args.Length;
+			else
+				argsLength = 0;
+
+			var del = (Delegate)host.func<object>(argsLength, ((dynamic)script)[name]);
 			return del.DynamicInvoke(args);
 		}
 
+		public static object InvokeFunction(ScriptEngine engine, object script, string name, object args)
+		{
+			var host = new HostFunctions();
+			((IScriptableObject)host).OnExposedToScriptCode(engine);
+			int argsLength = 0;
+
+			if (args != null)
+				argsLength = 1;
+
+
+			var del = (Delegate)host.func<object>(argsLength, ((dynamic)script)[name]);
+			return del.DynamicInvoke(args);
+		}
 		public static dynamic hasMethod = V8Instance.GetInstance().Evaluate(@"
 			(function (obj, name, paramCount) {
 				return (typeof obj[name] === 'function') && (obj[name].length === paramCount);

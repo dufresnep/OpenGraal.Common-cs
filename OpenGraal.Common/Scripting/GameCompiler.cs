@@ -192,17 +192,15 @@ namespace OpenGraal.Common.Scripting
 
 				if (scrpt != null)
 				{
-					//Console.WriteLine(ScriptObj.Type);
+					if (ScriptObj.V8ScriptName == null)
+						ScriptObj.V8ScriptName = ScriptObj.Type.ToString().ToLower() + NextId[(int)ScriptObj.Type]++;
+					// var " + ScriptObj.V8ScriptName + " = 
+					ScriptObj.AttachToGlobalScriptInstance = "(function(engine){\nvar self = this;\n\n" + Script[0] + "\nreturn self;\n});";
+					ScriptObj.scriptobj = V8Instance.GetInstance().Evaluate(@ScriptObj.AttachToGlobalScriptInstance);
 					if (ScriptObj.Type != IRefObject.ScriptType.CLASS)
 						ScriptObj.ScriptObject = this.RunScript(ScriptObj, scrpt);
 
-					if (ScriptObj.V8ScriptName == null)
-						ScriptObj.V8ScriptName = ScriptObj.Type.ToString() + "_" + NextId[(int)ScriptObj.Type]++;
-
-					ScriptObj.AttachToGlobalScriptInstance = "var " + ScriptObj.V8ScriptName + " = function(engine){\nvar self = this;\nself.onCreated= function() {\nonCreated();\n};\nself.onTimeout= function() {\nonTimeout();\n};\n// their code start\n" + Script[0] + "\n// their code end\nreturn self;\n}(theEngine);";
 					
-					//V8Script test = 
-					dynamic test = null;
 				}
 			}
 			catch (ScriptEngineException e)

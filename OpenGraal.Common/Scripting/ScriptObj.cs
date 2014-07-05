@@ -18,8 +18,9 @@ namespace OpenGraal.Common.Scripting
 		// -- Member Variables -- //
 		static public Random rand = new Random();
 		public List<ScriptEvent> ScriptEvents = new List<ScriptEvent>();
-		private V8Script _scriptobj;
-		public V8Script scriptobj
+		public ScriptEngine engine = null;
+		private dynamic _scriptobj;
+		public dynamic scriptobj
 		{
 			get 
 			{
@@ -106,26 +107,14 @@ namespace OpenGraal.Common.Scripting
 		/// </summary>
 		public void Call(String Event, Object[] Args)
 		{
-			Type type = this.GetType();
 			try
 			{
-				/*
-				if (V8Instance.hasMethod(V8Instance.GetInstance().Script, ScriptObj.V8ScriptName, 1))
-				{
-					dynamic test = null;
-					if (this. == IRefObject.ScriptType.WEAPON)
-						test = V8Instance.InvokeFunction(V8Instance.GetInstance(), ScriptObj.V8ScriptName, new object[] { new ScriptWeapon(ScriptObj) });
-					else if (ScriptObj.Type == IRefObject.ScriptType.LEVELNPC)
-						test = V8Instance.InvokeFunction(V8Instance.GetInstance(), ScriptObj.V8ScriptName, new object[] { new ScriptLevelNpc(ScriptObj) });
-					test.onCreated();
-
-				}
-				*/
-
+				if (this.scriptobj != null)
+					V8Instance.InvokeFunction(this.engine, this.scriptobj, Event, Args);
 			}
 			catch (Exception e)
 			{
-				//Console.WriteLine(e.Message);
+				Console.WriteLine(e.Message);
 			}
 		}
 

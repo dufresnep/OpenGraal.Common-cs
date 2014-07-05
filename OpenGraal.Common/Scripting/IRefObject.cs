@@ -25,7 +25,7 @@ namespace OpenGraal.Common.Scripting
 		/// Member Variables
 		/// </summary>
 		public ScriptObj ScriptObject;
-		public Microsoft.ClearScript.V8.V8ScriptEngine scriptobj;
+		public dynamic scriptobj;
 		public String V8ScriptName;
 		public String AttachToGlobalScriptInstance;
 		public ScriptType Type;
