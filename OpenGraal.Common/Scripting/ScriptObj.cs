@@ -19,6 +19,7 @@ namespace OpenGraal.Common.Scripting
 		static public Random rand = new Random();
 		public List<ScriptEvent> ScriptEvents = new List<ScriptEvent>();
 		public ScriptEngine engine = null;
+
 		private dynamic _scriptobj;
 		public dynamic scriptobj
 		{
@@ -114,7 +115,7 @@ namespace OpenGraal.Common.Scripting
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine(e.Message);
+				//Console.WriteLine(e.Message);
 			}
 		}
 
@@ -269,7 +270,7 @@ namespace OpenGraal.Common.Scripting
 		/// </summary>
 		public void SendRCChat(String Message)
 		{
-			this.Server.SendPacket(new CString() + (byte)79 + Message);
+			this.Server.SendPacket(new CString((byte)79 + Message));
 		}
 
 		/// <summary>
