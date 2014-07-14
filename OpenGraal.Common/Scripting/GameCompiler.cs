@@ -14,7 +14,7 @@ using System.IO;
 
 namespace OpenGraal.Common.Scripting
 {
-	public class GameCompiler
+	public class GameCompiler : IDisposable
 	{
 		/// <summary>
 		/// Compile Thread
@@ -97,6 +97,30 @@ namespace OpenGraal.Common.Scripting
 			Runners = new Thread[Environment.ProcessorCount * 4];
 		}
 
+		public void Dispose()
+		{
+			CompileList.Clear();
+			RunList.Clear();
+			foreach (Thread t in Compilers)
+			{
+				if (t != null)
+				{
+					t.Join();
+					t.Abort();
+				}
+			}
+
+			foreach (Thread t in Runners)
+			{
+				if (t != null)
+				{
+					t.Join();
+					t.Abort();
+				}
+			}
+
+			
+		}
 		/// <summary>
 		/// Manage active compilers
 		/// </summary>
@@ -179,7 +203,7 @@ namespace OpenGraal.Common.Scripting
 		{
 			String[] Script = ParseJoins(ScriptObj.Script);
 			V8Script scrpt = null;
-
+			
 			//Serverside script
 			try
 			{
@@ -195,7 +219,7 @@ namespace OpenGraal.Common.Scripting
 					if (ScriptObj.V8ScriptName == null)
 						ScriptObj.V8ScriptName = ScriptObj.Type.ToString().ToLower() + NextId[(int)ScriptObj.Type]++;
 					// var " + ScriptObj.V8ScriptName + " = 
-					ScriptObj.AttachToGlobalScriptInstance = "(function(engine){\nvar self = this;\n\n" + Script[0] + "\nreturn self;\n});";
+					ScriptObj.AttachToGlobalScriptInstance = "(function(engine){\nvar self = this; var player;\nvar ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;\nvar\n    push             = ArrayProto.push,\n    slice            = ArrayProto.slice,\n    concat           = ArrayProto.concat,\n    toString         = ObjProto.toString,\n    hasOwnProperty   = ObjProto.hasOwnProperty;\n      var\n    nativeForEach      = ArrayProto.forEach,\n    nativeMap          = ArrayProto.map,\n    nativeReduce       = ArrayProto.reduce,\n    nativeReduceRight  = ArrayProto.reduceRight,\n    nativeFilter       = ArrayProto.filter,\n    nativeEvery        = ArrayProto.every,\n    nativeSome         = ArrayProto.some,\n    nativeIndexOf      = ArrayProto.indexOf,\n    nativeLastIndexOf  = ArrayProto.lastIndexOf,\n    nativeIsArray      = Array.isArray,\n    nativeKeys         = Object.keys,\n    nativeBind         = FuncProto.bind;\n      var each = this.each = this.forEach = function(obj, iterator, context) {\n    if (obj == null) return obj;\n    if (nativeForEach && obj.forEach === nativeForEach) {\n      obj.forEach(iterator, context);\n    } else if (obj.length === +obj.length) {\n      for (var i = 0, length = obj.length; i < length; i++) {\n        if (iterator.call(context, obj[i], i, obj) === breaker) return;\n      }\n    } else {\n      var keys = _.keys(obj);\n      for (var i = 0, length = keys.length; i < length; i++) {\n        if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker) return;\n      }\n    }\n    return obj;\n  };\nthis.extend = function(obj) {\n    each(slice.call(arguments, 1), function(source) {\n      if (source) {\n        for (var prop in source) {\n          obj[prop] = source[prop];\n        }\n      }\n    });\n    return obj;\n};\nthis.extend(this, engine);\nthis.extend(this, system); \n\n" + Script[0] + "\nreturn self;\n});";
 					ScriptObj.scriptobj = V8Instance.GetInstance().Evaluate(@ScriptObj.AttachToGlobalScriptInstance);
 					if (ScriptObj.Type != IRefObject.ScriptType.CLASS)
 						ScriptObj.ScriptObject = this.RunScript(ScriptObj, scrpt);
@@ -242,6 +266,7 @@ namespace OpenGraal.Common.Scripting
 		{
 			MatchCollection col = Regex.Matches(Script, "join\\(\"(?<class>[A-Za-z0-9]*)\"\\);", RegexOptions.IgnoreCase);
 			String NewScript = Regex.Replace(Script, "join\\(\"(?<class>[A-Za-z0-9]*)\"\\);", "", RegexOptions.IgnoreCase);
+			NewScript = NewScript.Replace("\0", "");
 			String Serverside, Clientside;
 
 			foreach (Match x in col)

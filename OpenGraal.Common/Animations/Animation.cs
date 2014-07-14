@@ -22,12 +22,13 @@ namespace OpenGraal.Common.Animations
 		private bool _isLoop, _isContinuous, _isSingleDir = false;
 		private CString _setBackTo;
 		private int _max;
-		private List<int> _waits = new List<int>();
+		private List<float> _waits = new List<float>();
 		private List<Frame> _frames = new List<Frame>();
 		private List<Sprite> _spriteList = new List<Sprite>();
 		public bool playing = true;
-		public int currentWait;
+		public float currentWait;
 		public int currentFrame;
+		public bool dontIncrement;
 		public bool errord = false;
 
 		#endregion
@@ -58,7 +59,7 @@ namespace OpenGraal.Common.Animations
 			}
 		}
 
-		public List<int> Waits
+		public List<float> Waits
 		{
 			get
 			{
@@ -246,7 +247,7 @@ namespace OpenGraal.Common.Animations
 									continue;
 								}
 
-								if (line.Split(' ')[0] == "PLAYSOUND")
+								if (line.Contains("PLAYSOUND"))
 								{
 									line = nextLine(lines);
 									continue;
@@ -268,9 +269,15 @@ namespace OpenGraal.Common.Animations
 										int c = 0;
 										foreach (string p in partsO)
 										{
-											if (IsNumeric(p))
+											if (p == "PLAYSOUND")
 											{
-												parts[c++] = p;
+											}
+											if (p != "PLAYSOUND" && p != "WAIT")
+											{
+												if (IsNumeric(p))
+												{
+													parts[c++] = p;
+												}
 											}
 										}
 
@@ -290,7 +297,7 @@ namespace OpenGraal.Common.Animations
 								}
 
 								_frames.Add(newFrame);
-								_waits.Add(0);
+								_waits.Add(0.05f);
 
 								line = nextLine(lines);
 								line = line.Trim();
@@ -301,13 +308,19 @@ namespace OpenGraal.Common.Animations
 									string[] toks = line.Split(' ');
 									if (toks[0] == "WAIT")
 									{
-										_waits[_frames.Count - 1] = int.Parse(toks[1]);
+										_waits[_frames.Count - 1] = float.Parse(toks[1]);
+									}
+									if (toks[0] == "PLAYSOUND")
+									{
+										newFrame.PlaySound = toks[1];
+										//newFrame.x = double.Parse(toks[2]);
+										//newFrame.y = double.Parse(toks[3]);
 									}
 									if (line == "ANIEND")
 									{
 										break;
 									}
-									else if (line.Length == 0 || line == "\n" || line == "\r" || !IsNumeric(toks[0]))
+									else if (line.Length == 0 || line == "\n" || line == "\r" || line.Contains("WAIT") || line.Contains("PLAYSOUND"))
 									{
 										line = nextLine(lines);
 										line = line.Trim();
@@ -364,9 +377,9 @@ namespace OpenGraal.Common.Animations
 
 			try
 			{
-				if (Expression is string)
-					Double.Parse(Expression as string);
-				else
+				//if (Expression is string)
+				//	Double.Parse(Expression as string);
+				//else
 					Double.Parse(Expression.ToString());
 				return true;
 			}

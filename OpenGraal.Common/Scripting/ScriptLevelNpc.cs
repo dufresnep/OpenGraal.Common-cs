@@ -37,7 +37,7 @@ namespace OpenGraal.Common.Scripting
 			set
 			{
 				Ref.PixelX = Convert.ToInt32(value * 16.0);
-				Ref.SendProp(GraalLevelNPC.Properties.PIXELX);
+				Ref.SendProp(Common.Interfaces.NpcProperties.PIXELX);
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace OpenGraal.Common.Scripting
 			set
 			{
 				Ref.PixelY = Convert.ToInt32(value * 16.0);
-				Ref.SendProp(GraalLevelNPC.Properties.PIXELY);
+				Ref.SendProp(Common.Interfaces.NpcProperties.PIXELY);
 			}
 		}
 
@@ -73,7 +73,7 @@ namespace OpenGraal.Common.Scripting
 		/// <summary>
 		/// Level -> Read Only
 		/// </summary>
-		public GraalLevel level
+		public Common.Interfaces.ILevel level
 		{
 			get { return Ref.Level; }
 		}
@@ -92,7 +92,7 @@ namespace OpenGraal.Common.Scripting
 		public void blockagain()
 		{
 			Ref.BlockFlags = 0;
-			Ref.SendProp(GraalLevelNPC.Properties.BLOCKFLAGS);
+			Ref.SendProp(Common.Interfaces.NpcProperties.BLOCKFLAGS);
 		}
 
 		/// <summary>
@@ -101,7 +101,7 @@ namespace OpenGraal.Common.Scripting
 		public void dontblock()
 		{
 			Ref.BlockFlags = 1;
-			Ref.SendProp(GraalLevelNPC.Properties.BLOCKFLAGS);
+			Ref.SendProp(Common.Interfaces.NpcProperties.BLOCKFLAGS);
 		}
 
 		/// <summary>
@@ -110,7 +110,7 @@ namespace OpenGraal.Common.Scripting
 		public void drawoverplayer()
 		{
 			Ref.VisFlags |= 2;
-			Ref.SendProp(GraalLevelNPC.Properties.VISFLAGS);
+			Ref.SendProp(Common.Interfaces.NpcProperties.VISFLAGS);
 		}
 
 		/// <summary>
@@ -120,7 +120,7 @@ namespace OpenGraal.Common.Scripting
 		{
 			Ref.VisFlags &= ~2;
 			Ref.VisFlags |= 4;
-			Ref.SendProp(GraalLevelNPC.Properties.VISFLAGS);
+			Ref.SendProp(Common.Interfaces.NpcProperties.VISFLAGS);
 		}
 
 		/// <summary>
@@ -129,7 +129,7 @@ namespace OpenGraal.Common.Scripting
 		public void message(string msg)
 		{
 			Ref.Chat = msg;
-			Ref.SendProp(GraalLevelNPC.Properties.MESSAGE);
+			Ref.SendProp(Common.Interfaces.NpcProperties.MESSAGE);
 		}
 
 		/// <summary>
@@ -192,8 +192,8 @@ namespace OpenGraal.Common.Scripting
 		{
 			Ref.Image = image;
 			Ref.ImagePart = new CString() + (short)0 + (short)0 + (byte)0 + (byte)0;
-			Ref.SendProp(GraalLevelNPC.Properties.IMAGE);
-			Ref.SendProp(GraalLevelNPC.Properties.IMAGEPART);
+			Ref.SendProp(Common.Interfaces.NpcProperties.IMAGE);
+			Ref.SendProp(Common.Interfaces.NpcProperties.IMAGEPART);
 		}
 
 		/// <summary>
@@ -203,8 +203,8 @@ namespace OpenGraal.Common.Scripting
 		{
 			Ref.Image = image;
 			Ref.ImagePart = new CString() + (short)x + (short)y + (byte)w + (byte)h;
-			Ref.SendProp(GraalLevelNPC.Properties.IMAGE);
-			Ref.SendProp(GraalLevelNPC.Properties.IMAGEPART);
+			Ref.SendProp(Common.Interfaces.NpcProperties.IMAGE);
+			Ref.SendProp(Common.Interfaces.NpcProperties.IMAGEPART);
 		}
 
 		/// <summary>
@@ -213,7 +213,7 @@ namespace OpenGraal.Common.Scripting
 		public void hide()
 		{
 			Ref.VisFlags &= ~1;
-			Ref.SendProp(GraalLevelNPC.Properties.VISFLAGS);
+			Ref.SendProp(Common.Interfaces.NpcProperties.VISFLAGS);
 		}
 
 		/// <summary>
@@ -222,7 +222,7 @@ namespace OpenGraal.Common.Scripting
 		public void show()
 		{
 			Ref.VisFlags |= 1;
-			Ref.SendProp(GraalLevelNPC.Properties.VISFLAGS);
+			Ref.SendProp(Common.Interfaces.NpcProperties.VISFLAGS);
 		}
 
 		/// <summary>

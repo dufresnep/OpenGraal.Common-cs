@@ -146,7 +146,7 @@ namespace OpenGraal.Common.Players
 		/// </summary>
 		private ColorManager _colorManager = null;
 		private FlagManager _flagManager = null;
-		private GraalLevel _level = null;
+		private Interfaces.ILevel _level = null;
 		private GraalMap _playerMap = null;
 		private List<ServerWeapon> _weaponList = new List<ServerWeapon>();
 		private ClientType _type = 0;
@@ -340,8 +340,8 @@ namespace OpenGraal.Common.Players
 						short res = (short)((_pixelY < 0 ? -_pixelY : _pixelY) << 1);
 						if (_pixelY < 0)
 							res |= 0x0001;
-						return new CString() + (short)res;
-						//return new CString() + this.PixelY;
+						return new CString() + res;
+						//return new CString() + (short)this.PixelY;
 					}
 
 				default:
@@ -1007,6 +1007,7 @@ namespace OpenGraal.Common.Players
 
 			this.Server.SendPacket(new CString() + (byte)103 + (byte)10 + (short)Id + Weapon.Name);
 			_weaponList.Add(Weapon);
+			//Weapon.Call("AddPlayerToContext", new object[] {this});
 		}
 
 		/// <summary>
@@ -1098,7 +1099,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Function -> SetAni (Set Animation + Gani Attributes)
 		/// </summary>
-		public void SetAni(String Ani, params string[] Params)
+		public void setAni(String Ani, params string[] Params)
 		{
 			this.Ani = Ani;
 			// set ganiattr params
@@ -1138,7 +1139,7 @@ namespace OpenGraal.Common.Players
 		/// <summary>
 		/// Functions -> Retrieve variables for scripting / update props
 		/// </summary>
-		public virtual string Account
+		public string Account
 		{
 			get { return _account; }
 			set { _account = value; }
@@ -1295,7 +1296,7 @@ namespace OpenGraal.Common.Players
 			}
 		}
 
-		public virtual int Dir
+		public int Dir
 		{
 			get { return this._dir; }
 			set
@@ -1318,7 +1319,7 @@ namespace OpenGraal.Common.Players
 			{
 				this._pixelX = value;
 				this.SendProp(Properties.PIXELX);
-				Console.WriteLine("Sending PixelX: " + this.PixelX);
+				//Console.WriteLine("Sending PixelX: " + this.PixelX);
 			}
 		}
 
@@ -1329,7 +1330,7 @@ namespace OpenGraal.Common.Players
 			{
 				this._pixelY = value;
 				this.SendProp(Properties.PIXELY);
-				Console.WriteLine("Sending PixelY: " + this.PixelY);
+				//Console.WriteLine("Sending PixelY: " + this.PixelY);
 			}
 		}
 
@@ -1338,7 +1339,7 @@ namespace OpenGraal.Common.Players
 			get { return this._flagManager; }
 		}
 
-		public virtual FlagManager FlagManager
+		public virtual FlagManager flags
 		{
 			get { return this._flagManager; }
 			set { this._flagManager = value; }
@@ -1436,10 +1437,20 @@ namespace OpenGraal.Common.Players
 			}
 		}
 
-		public virtual GraalLevel Level
+		public virtual Common.Interfaces.ILevel Level
 		{ // should return levelobject
 			get { return _level; }
 			set { _level = value; }
+		}
+
+		public void setLevel(string level, double x, double y)
+		{
+			//CString test = new CString();
+			//Console.WriteLine(level + " " + x + " " + y);
+			//double x2 = Convert.ToDouble(x);
+			//Console.WriteLine(x2.ToString());
+			//double y2 = Convert.ToDouble(y);
+			this.Server.SendPacket(new CString() + (byte)103 + (byte)9 + (short)this.Id + (byte)0 + (byte)(x * 2.0f) + (byte)(y * 2.0f)+level);
 		}
 
 		public virtual int Mp
@@ -1471,7 +1482,7 @@ namespace OpenGraal.Common.Players
 				this.SendProp(Properties.CURLEVEL);
 			}
 		}
-
+		
 		public virtual int Rupees
 		{
 			get { return _gralats; }
@@ -1547,7 +1558,7 @@ namespace OpenGraal.Common.Players
 			get { return (this._playerStatus & (int)Status.ALLOWWEAPONS) != 0; }
 		}
 
-		public virtual double X
+		public double X
 		{
 			get { return _pixelX / 16; }
 			set
@@ -1557,7 +1568,7 @@ namespace OpenGraal.Common.Players
 			}
 		}
 
-		public virtual double Y
+		public double Y
 		{
 			get { return _pixelY / 16; }
 			set

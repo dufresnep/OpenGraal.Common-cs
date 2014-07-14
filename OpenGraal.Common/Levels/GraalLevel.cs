@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using OpenGraal;
@@ -9,31 +11,28 @@ using OpenGraal.Common.Players;
 
 namespace OpenGraal.Common.Levels
 {
-	public class GraalLevel
+	public class GraalLevel : Interfaces.ILevel
 	{
 		#region Member Variables
 
 		/// <summary>
 		/// Member Variables
 		/// </summary>
-		public Dictionary<int, GraalLevelNPC> NpcList = new Dictionary<int, GraalLevelNPC>();
 		public Dictionary<int, GraalLevelSign> SignList = new Dictionary<int, GraalLevelSign>();
 		public Dictionary<int, GraalLevelLink> LinkList = new Dictionary<int, GraalLevelLink>();
 		public FlagManager FlagManager = null;
-		public List<GraalPlayer> Players = new List<GraalPlayer>();
 		//public short[] Tiles = new short[4096];
-		public uint ModTime;
-		public string Name;
+		
 		public object TimerLock = new object();
 		public CString base64 = new CString() + "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 		public GraalLevelTile[] Tiles = new GraalLevelTile[4096];
 		public Dictionary<int, GraalLevelTileList> layers = new Dictionary<int, GraalLevelTileList>();
 
-		public bool isOnMap { get; set; }
+		public override bool isOnMap { get; set; }
 
-		public int MapPositionX { get; set; }
+		public override int MapPositionX { get; set; }
 
-		public int MapPositionY { get; set; }
+		public override int MapPositionY { get; set; }
 
 		#endregion
 
@@ -62,6 +61,7 @@ namespace OpenGraal.Common.Levels
 		/// Constructor
 		/// </summary>
 		public GraalLevel(String LevelName, object TimerLock)
+			: base(LevelName)
 		{
 			this.Name = LevelName;
 			this.TimerLock = TimerLock;
@@ -86,189 +86,6 @@ namespace OpenGraal.Common.Levels
 
 		#region Public functions
 
-		/// <summary>
-		/// Clear Level (test)
-		/// </summary>
-		public void Clear()
-		{
-			// Reset Mod Time
-			this.ModTime = 0;
-
-			// Clear NPCS
-			this.Players.Clear();
-			lock (this.TimerLock)
-			{
-				this.NpcList.Clear();
-			}
-		}
-
-		/// <summary>
-		/// Add Player to Level
-		/// </summary>
-		/// <param name="Player"></param>
-		public void AddPlayer(GraalPlayer Player)
-		{
-			if (!Players.Contains(Player) && Player != null)
-			{
-				Players.Add(Player);
-				try
-				{
-					Player.Level = this;
-					this.CallNPCs("onPlayerEnters", new object[] { Player });
-					Player.CallNPCs("onPlayerEnters", new object[] { Player });
-				}
-				catch (System.NullReferenceException e)
-				{
-					Console.WriteLine("error: " + e.Message);
-				}
-				
-			}
-		}
-
-		/// <summary>
-		/// Find Player by Id
-		/// </summary>
-		public virtual GraalPlayer FindPlayer(Int16 Id)
-		{
-			foreach (GraalPlayer Player in Players)
-			{
-				if (Player.Id == Id)
-					return Player;
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Find Player by Account
-		/// </summary>
-		public virtual GraalPlayer FindPlayer(String Account)
-		{
-			GraalPlayer rc = null;
-			foreach (GraalPlayer Player in Players)
-			{
-				if (Player.Account == Account)
-				{
-					return Player;
-				}
-			}
-
-			return rc;
-		}
-
-		/// <summary>
-		/// Find Player by Id/Account
-		/// </summary>
-		public virtual GraalPlayer FindPlayer(String pAccount, Int16 pId)
-		{
-			foreach (GraalPlayer Player in Players)
-			{
-				if (Player.Account == pAccount && Player.Id == pId)
-					return Player;
-			}
-
-			return null;
-		}
-
-		/// <summary>
-		/// Delete Player from Level
-		/// </summary>
-		/// <param name="Player"></param>
-		public void DeletePlayer(GraalPlayer Player)
-		{
-			if (Players.Contains(Player))
-			{
-				Player.CallNPCs("onPlayerLeaves", new object[] { Player });
-				Players.Remove(Player);
-				
-				this.CallNPCs("onPlayerLeaves", new object[] { Player });
-			}
-		}
-
-		/// <summary>
-		/// Call NPC Events
-		/// </summary>
-		public void CallNPCs(String Event, object[] Args)
-		{
-			foreach (KeyValuePair<int, GraalLevelNPC> e in NpcList)
-				e.Value.Call(Event, Args);
-		}
-
-		/// <summary>
-		/// Delete NPC from List
-		/// </summary>
-		public bool DeleteNPC(int Id)
-		{
-			lock (this.TimerLock)
-			{
-				return NpcList.Remove(Id);
-			}
-		}
-
-		/// <summary>
-		/// Gets a npc from the level with the specified level id.
-		/// </summary>
-		public GraalLevelNPC GetNPC(int Id)
-		{
-			GraalLevelNPC npc = null;
-			if (!NpcList.TryGetValue(Id, out npc))
-			{
-				npc = new GraalLevelNPC(this, Id);
-				lock (this.TimerLock)
-				{
-					NpcList[Id] = npc;
-				}
-			}
-			return npc;
-		}
-
-		/// <summary>
-		/// Gets a npc from the level with the specified level id.
-		/// </summary>
-		public GraalLevelNPC GetNPC(CSocket socket, int Id)
-		{
-			GraalLevelNPC npc = null;
-			if (!NpcList.TryGetValue(Id, out npc))
-			{
-				npc = new GraalLevelNPC(socket, this, Id);
-				lock (this.TimerLock)
-				{
-					NpcList[Id] = npc;
-				}
-			}
-			return npc;
-		}
-
-		/// <summary>
-		/// Set Mod Time
-		/// </summary>
-		public void SetModTime(uint NewTime)
-		{
-			this.ModTime = NewTime;
-		}
-
-		/// <summary>
-		/// Player is on npc
-		/// </summary>
-		public GraalLevelNPC isOnNPC(int x, int y)
-		{
-			foreach (KeyValuePair<int, GraalLevelNPC> v in NpcList)
-			{
-				GraalLevelNPC npc = v.Value;
-				if (npc.Image != String.Empty)
-				{
-					if ((npc.VisFlags & 1) != 0) // && (npc.BlockFlags & 1) == 0
-					{
-						if (x >= npc.PixelX && x <= npc.PixelX + npc.Width && y >= npc.PixelY && y < npc.PixelY + npc.Height)
-							return npc;
-					}
-				}
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Check if X/Y is on a wall
-		/// </summary>
 		public bool isOnWall(double x, double y)
 		{
 			if (x < 0 || x >= 64 || y < 0 || y >= 64)
@@ -345,7 +162,7 @@ namespace OpenGraal.Common.Levels
 		/*
 		 * Thanks to the Gonstruct source for some help with the Load and Save functions!
 		 */
-		public bool Load(string pFileName)
+		public override bool Load(string pFileName)
 		{
 			return this.Load(new CString() + pFileName);
 		}
@@ -370,7 +187,7 @@ namespace OpenGraal.Common.Levels
 			return true;
 		}
 
-		public bool Load(CString pFileName)
+		public override bool Load(CString pFileName)
 		{
 			CStringList levelData = new CStringList();
 			if (!levelData.Load(pFileName.Text))
@@ -775,7 +592,7 @@ namespace OpenGraal.Common.Levels
 				npc.PixelY = Convert.ToInt32(npc.GMapY * 16.0);
 				isNpcCodeLine = true;
 
-				this.NpcList.Add(this.NpcList.Count + 1, npc);
+				this.NpcList.GetOrAdd(this.NpcList.Count + 1, npc);
 			}
 			return isNpcCodeLine;
 		}
@@ -927,7 +744,7 @@ namespace OpenGraal.Common.Levels
 			return str;
 		}
 
-		public void Render()
+		public override void ClearAll()
 		{
 			
 		}
@@ -953,7 +770,7 @@ namespace OpenGraal.Common.Levels
 			}
 		}
 
-		public Dictionary<int, GraalLevelTileList> Layers
+		public override Dictionary<int, GraalLevelTileList> Layers
 		{
 			get
 			{
@@ -964,7 +781,7 @@ namespace OpenGraal.Common.Levels
 		/// <summary>
 		/// Grab Local Players
 		/// </summary>
-		public List<GraalPlayer> players
+		public ConcurrentDictionary<int, GraalPlayer> players
 		{
 			get { return this.Players; }
 		}

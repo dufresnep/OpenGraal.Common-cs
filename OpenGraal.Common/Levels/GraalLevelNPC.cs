@@ -3,6 +3,7 @@ using System.Text;
 using OpenGraal;
 using OpenGraal.Core;
 using OpenGraal.Common;
+using OpenGraal.Common.Interfaces;
 using OpenGraal.Common.Scripting;
 using OpenGraal.Common.Players;
 using OpenGraal.Common.Animations;
@@ -12,205 +13,14 @@ using System.Runtime.Serialization;
 namespace OpenGraal.Common.Levels
 {
 	[Serializable]
-	public class GraalLevelNPC : IRefObject, IGaniObj, ISerializable
+	public class GraalLevelNPC : IRefObject, IGaniObj
 	{
 
-		 // Implement this method to serialize data. The method is called  
-		// on serialization. 
-		public void GetObjectData(SerializationInfo info, StreamingContext context)
-		{
-			// Use the AddValue method to specify serialized values.
-			info.AddValue("CompileScript", CompileScript, typeof(bool));
-			info.AddValue("npcserver",npcserver, typeof(bool));
-
-			// BYTES
-			info.AddValue("GMapX",GMapX, typeof(byte));
-			info.AddValue("GMapY",GMapY, typeof(byte));
-
-			// SBYTES
-			info.AddValue("BlockFlags",BlockFlags, typeof(sbyte));
-			info.AddValue("VisFlags",VisFlags, typeof(sbyte));
-
-			// DOUBLES
-			info.AddValue("Hearts",Hearts, typeof(double));
-
-			// INTS
-			info.AddValue("Ap",Ap, typeof(int));
-			info.AddValue("Arrows",Arrows, typeof(int));
-			info.AddValue("Bombs",Bombs, typeof(int));
-			info.AddValue("BombPower",BombPower, typeof(int));
-			info.AddValue("_dir",_dir, typeof(int));
-			info.AddValue("FullHearts",FullHearts, typeof(int));
-			info.AddValue("GlovePower",GlovePower, typeof(int));
-			info.AddValue("Gralats",Gralats, typeof(int));
-			info.AddValue("Id",Id, typeof(int));
-			info.AddValue("_pixelX",_pixelX, typeof(int));
-			info.AddValue("_pixelY",_pixelY, typeof(int));
-			info.AddValue("ShieldPower",ShieldPower, typeof(int));
-			info.AddValue("SwordPower",SwordPower, typeof(int));
-			info.AddValue("Width",Width, typeof(int));
-			info.AddValue("Height",Height, typeof(int));
-
-			// STRINGS
-			info.AddValue("Animation",Animation, typeof(string));
-			info.AddValue("_bodyImage",_bodyImage, typeof(string));
-			info.AddValue("Chat",Chat, typeof(string));
-			info.AddValue("_headImage",_headImage, typeof(string));
-			info.AddValue("_swordImage",_swordImage, typeof(string));
-			info.AddValue("_shieldImage",_shieldImage, typeof(string));
-			info.AddValue("Image",Image, typeof(string));
-			info.AddValue("Nickname",Nickname, typeof(string));
-			info.AddValue("prevGani",prevGani, typeof(string));
-
-			// MISC
-			info.AddValue("_currentGani",_currentGani, typeof(Animations.Animation));
-			info.AddValue("ImagePart",ImagePart, typeof(CString));
-			info.AddValue("Level",Level, typeof(GraalLevel));
-			info.AddValue("Save",Save, typeof(SaveIndex));
-			info.AddValue("Server",Server, typeof(CSocket));
-		}
-
-		// The special constructor is used to deserialize values. 
-		public GraalLevelNPC(SerializationInfo info, StreamingContext context)
-			: base(ScriptType.LEVELNPC)
-		{
-			// Reset the property value using the GetValue method.
-
-			// BOOLEANS
-			CompileScript = (bool)info.GetValue("CompileScript", typeof(bool));
-			npcserver = (bool)info.GetValue("npcserver", typeof(bool));
-
-			// BYTES
-			GMapX = (byte)info.GetValue("GMapX", typeof(byte));
-			GMapY = (byte)info.GetValue("GMapY", typeof(byte));
-
-			// SBYTES
-			BlockFlags = (sbyte)info.GetValue("BlockFlags", typeof(sbyte));
-			VisFlags = (sbyte)info.GetValue("VisFlags", typeof(sbyte));
-
-			// DOUBLES
-			Hearts = (double)info.GetValue("Hearts", typeof(double));
-
-			// INTS
-			Ap = (int)info.GetValue("Ap", typeof(int));
-			Arrows = (int)info.GetValue("Arrows", typeof(int));
-			Bombs = (int)info.GetValue("Bombs", typeof(int));
-			BombPower = (int)info.GetValue("BombPower", typeof(int));
-			_dir = (int)info.GetValue("_dir", typeof(int));
-			FullHearts = (int)info.GetValue("FullHearts", typeof(int));
-			GlovePower = (int)info.GetValue("GlovePower", typeof(int));
-			Gralats = (int)info.GetValue("Gralats", typeof(int));
-			Id = (int)info.GetValue("Id", typeof(int));
-			_pixelX = (int)info.GetValue("_pixelX", typeof(int));
-			_pixelY = (int)info.GetValue("_pixelY", typeof(int));
-			ShieldPower = (int)info.GetValue("ShieldPower", typeof(int));
-			SwordPower = (int)info.GetValue("SwordPower", typeof(int));
-			Width = (int)info.GetValue("Width", typeof(int));
-			Height = (int)info.GetValue("Height", typeof(int));
-
-			// STRINGS
-			Animation = (string)info.GetValue("Animation", typeof(string));
-			_bodyImage = (string)info.GetValue("_bodyImage", typeof(string));
-			Chat = (string)info.GetValue("Chat", typeof(string));
-			_headImage = (string)info.GetValue("_headImage", typeof(string));
-			_swordImage = (string)info.GetValue("_swordImage", typeof(string));
-			_shieldImage = (string)info.GetValue("_shieldImage", typeof(string));
-			Image = (string)info.GetValue("Image", typeof(string));
-			Nickname = (string)info.GetValue("Nickname", typeof(string));
-			prevGani = (string)info.GetValue("prevGani", typeof(string));
-
-			// MISC
-			_currentGani = (Animations.Animation)info.GetValue("_currentGani", typeof(Animations.Animation));
-			ImagePart = (CString)info.GetValue("ImagePart", typeof(CString));
-			Level = (GraalLevel)info.GetValue("Level", typeof(GraalLevel));
-			Save = (SaveIndex)info.GetValue("Save", typeof(SaveIndex));
-			Server = (CSocket)info.GetValue("Server", typeof(CSocket));
-		}
 		#region enums
 		/// <summary>
 		/// NPC Properties Enum
 		/// </summary>
-		public enum Properties
-		{
-			IMAGE = 0,
-			SCRIPT = 1,
-			NPCX = 2,
-			NPCY = 3,
-			NPCPOWER = 4,
-			NPCRUPEES = 5,
-			ARROWS = 6,
-			BOMBS = 7,
-			GLOVEPOWER = 8,
-			BOMBPOWER = 9,
-			SWORDIMG = 10,
-			SHIELDIMG = 11,
-			GANI = 12,
-			VISFLAGS = 13,
-			BLOCKFLAGS = 14,
-			MESSAGE = 15,
-			HURTDXDY = 16,
-			NPCID = 17,
-			SPRITE = 18,
-			COLORS = 19,
-			NICKNAME = 20,
-			HORSEIMG = 21,
-			HEADIMG = 22,
-			SAVE0 = 23,
-			SAVE1 = 24,
-			SAVE2 = 25,
-			SAVE3 = 26,
-			SAVE4 = 27,
-			SAVE5 = 28,
-			SAVE6 = 29,
-			SAVE7 = 30,
-			SAVE8 = 31,
-			SAVE9 = 32,
-			ALIGNMENT = 33,
-			IMAGEPART = 34,
-			BODYIMG = 35,
-			GATTRIB1 = 36,
-			GATTRIB2 = 37,
-			GATTRIB3 = 38,
-			GATTRIB4 = 39,
-			GATTRIB5 = 40,
-			GMAPLVLX = 41,
-			GMAPLVLY = 42,
-			EMPTY43 = 43,
-			GATTRIB6 = 44,
-			GATTRIB7 = 45,
-			GATTRIB8 = 46,
-			GATTRIB9 = 47,
-			UNKNOWN48 = 48,
-			UNKNOWN49 = 49,
-			UNKNOWN50 = 50,
-			UNKNOWN51 = 51,
-			UNKNOWN52 = 52,
-			GATTRIB10 = 53,
-			GATTRIB11 = 54,
-			GATTRIB12 = 55,
-			GATTRIB13 = 56,
-			GATTRIB14 = 57,
-			GATTRIB15 = 58,
-			GATTRIB16 = 59,
-			GATTRIB17 = 60,
-			GATTRIB18 = 61,
-			GATTRIB19 = 62,
-			GATTRIB20 = 63,
-			GATTRIB21 = 64,
-			GATTRIB22 = 65,
-			GATTRIB23 = 66,
-			GATTRIB24 = 67,
-			GATTRIB25 = 68,
-			GATTRIB26 = 69,
-			GATTRIB27 = 70,
-			GATTRIB28 = 71,
-			GATTRIB29 = 72,
-			GATTRIB30 = 73,
-			CLASS = 74,
-			// NPC-Server class.  Possibly also join scripts.
-			PIXELX = 75,
-			PIXELY = 76,
-		};
+		
 
 		/// <summary>
 		/// Enumerator -> Packet Out
@@ -284,7 +94,31 @@ namespace OpenGraal.Common.Levels
 		/// Member Variables
 		/// </summary>
 		public byte GMapX = 0, GMapY = 0;
-		public sbyte BlockFlags = 0, VisFlags = 17;
+		private sbyte _blockFlags = 0, _visFlags = 17;
+		public sbyte BlockFlags
+		{
+			get
+			{
+				return _blockFlags;
+			}
+			set
+			{
+				_blockFlags = value;
+			}
+		}
+
+		public sbyte VisFlags
+		{
+			get
+			{
+				return _visFlags;
+			}
+			set
+			{
+				_visFlags = value;
+			}
+		}
+
 		public double
 			Hearts = 3.0;
 		public int
@@ -301,8 +135,33 @@ namespace OpenGraal.Common.Levels
 			_pixelY = 488,
 			ShieldPower = 1,
 			SwordPower = 1,
-			Width = 2,
-			Height = 2;
+			_width = 2,
+			_height = 2;
+
+		public int Width
+		{
+			get
+			{
+				return _width;
+			}
+			set
+			{
+				_width = value;
+			}
+		}
+
+		public int Height
+		{
+			get
+			{
+				return _height;
+			}
+			set
+			{
+				_height = value;
+			}
+		}
+
 		public string
 			Animation = "idle",
 			_bodyImage = "body.png",
@@ -310,9 +169,21 @@ namespace OpenGraal.Common.Levels
 			_headImage = "head0.png",
 			_swordImage = "",
 			_shieldImage = "",
-			Image = String.Empty,
+			_image = String.Empty,
 			Nickname = "unknown",
 			prevGani = "";
+
+		public string Image
+		{
+			get
+			{
+				return _image;
+			}
+			set
+			{
+				_image = value;
+			}
+		}
 
 		public string HeadImage
 		{
@@ -361,7 +232,7 @@ namespace OpenGraal.Common.Levels
 			OldX = 0.00f,
 			OldY = 0.00f;
 		public CString ImagePart;
-		public GraalLevel Level = null;
+		public ILevel Level = null;
 		public SaveIndex Save = null;
 		internal CSocket Server;
 
@@ -370,10 +241,10 @@ namespace OpenGraal.Common.Levels
 		/// </summary>
 		public override string GetErrorText()
 		{
-			return new StringBuilder(Level.name).Append(" (").Append(PixelX / 16).Append(',').Append(PixelY / 16).Append(')').ToString();
+			return new StringBuilder(Level.Name).Append(" (").Append(PixelX / 16).Append(',').Append(PixelY / 16).Append(')').ToString();
 		}
 
-		public GraalLevelNPC(GraalLevel Level, int Id)
+		public GraalLevelNPC(ILevel Level, int Id)
 			: base(ScriptType.LEVELNPC)
 		{
 			this.Server = null;
@@ -385,7 +256,7 @@ namespace OpenGraal.Common.Levels
 		/// <summary>
 		/// Constructor
 		/// </summary>
-		public GraalLevelNPC(CSocket Server, GraalLevel Level, int Id)
+		public GraalLevelNPC(CSocket Server, ILevel Level, int Id)
 			: base(ScriptType.LEVELNPC)
 		{
 			this.Server = Server;
@@ -397,7 +268,7 @@ namespace OpenGraal.Common.Levels
 		/// <summary>
 		/// Send Prop to GServer
 		/// </summary>
-		public void SendProp(Properties PropId)
+		public void SendProp(NpcProperties PropId)
 		{
 			//Console.WriteLine (this.Server.Connected);
 			//Console.WriteLine("Debug: " + (byte)3 + (int)this.Id + (byte)PropId + GetProp(PropId));
@@ -408,65 +279,65 @@ namespace OpenGraal.Common.Levels
 		/// <summary>
 		/// Get Property
 		/// </summary>
-		public CString GetProp(Properties PropId)
+		public CString GetProp(NpcProperties PropId)
 		{
 			switch (PropId)
 			{
-				case Properties.IMAGE: // 0
+				case NpcProperties.IMAGE: // 0
 					return new CString() + (byte)this.Image.Length + this.Image;
 
-				case Properties.SCRIPT: // 1
+				case NpcProperties.SCRIPT: // 1
 					return new CString() + (long)this.Script.Length + this.Script;
 
-				case Properties.VISFLAGS: // 13
+				case NpcProperties.VISFLAGS: // 13
 					return new CString() + (byte)VisFlags;
 
-				case Properties.BLOCKFLAGS: // 14
+				case NpcProperties.BLOCKFLAGS: // 14
 					return new CString() + (byte)BlockFlags;
 
-				case Properties.MESSAGE: // 15
+				case NpcProperties.MESSAGE: // 15
 					return new CString() + (byte)Chat.Length + Chat;
 
-				case Properties.SAVE0: // 23
+				case NpcProperties.SAVE0: // 23
 					return new CString() + (byte)Save[0];
 
-				case Properties.SAVE1: // 24
+				case NpcProperties.SAVE1: // 24
 					return new CString() + (byte)Save[1];
 
-				case Properties.SAVE2: // 25
+				case NpcProperties.SAVE2: // 25
 					return new CString() + (byte)Save[2];
 
-				case Properties.SAVE3: // 26
+				case NpcProperties.SAVE3: // 26
 					return new CString() + (byte)Save[3];
 
-				case Properties.SAVE4: // 27
+				case NpcProperties.SAVE4: // 27
 					return new CString() + (byte)Save[4];
 
-				case Properties.SAVE5: // 28
+				case NpcProperties.SAVE5: // 28
 					return new CString() + (byte)Save[5];
 
-				case Properties.SAVE6: // 29
+				case NpcProperties.SAVE6: // 29
 					return new CString() + (byte)Save[6];
 
-				case Properties.SAVE7: // 30
+				case NpcProperties.SAVE7: // 30
 					return new CString() + (byte)Save[7];
 
-				case Properties.SAVE8: // 31
+				case NpcProperties.SAVE8: // 31
 					return new CString() + (byte)Save[8];
 
-				case Properties.SAVE9: // 32
+				case NpcProperties.SAVE9: // 32
 					return new CString() + (byte)Save[9];
 
-				case Properties.IMAGEPART: // 34
+				case NpcProperties.IMAGEPART: // 34
 					return ImagePart;
 
-				case Properties.GMAPLVLX: // 41
+				case NpcProperties.GMAPLVLX: // 41
 					return new CString() + (byte)GMapX;
 
-				case Properties.GMAPLVLY: // 42
+				case NpcProperties.GMAPLVLY: // 42
 					return new CString() + (byte)GMapY;
 
-				case Properties.PIXELX: // 75
+				case NpcProperties.PIXELX: // 75
 					{
 						int res = (PixelX < 0 ? -PixelX : PixelX) << 1;
 						if (PixelX < 0)
@@ -474,7 +345,7 @@ namespace OpenGraal.Common.Levels
 						return new CString() + (short)res;
 					}
 
-				case Properties.PIXELY: // 76
+				case NpcProperties.PIXELY: // 76
 					{
 						int res = (PixelY < 0 ? -PixelY : PixelY) << 1;
 						if (PixelY < 0)
@@ -491,7 +362,7 @@ namespace OpenGraal.Common.Levels
 		}
 
 		/// <summary>
-		/// Set Properties
+		/// Set NpcProperties
 		/// </summary>
 		/// <param name="Packet"></param>
 		public void SetProps(CString Packet)
@@ -500,13 +371,13 @@ namespace OpenGraal.Common.Levels
 			{
 				Int32 PropId = Packet.readGUChar();
 				//Console.Write("[prop]: " + PropId.ToString());
-				switch ((Properties)PropId)
+				switch ((NpcProperties)PropId)
 				{
-					case Properties.IMAGE: // 0
+					case NpcProperties.IMAGE: // 0
 						this.Image = Packet.readChars(Packet.readGUChar()).ToString();
 						break;
 
-					case Properties.SCRIPT: // 1
+					case NpcProperties.SCRIPT: // 1
 						int length;
 						if (!this.npcserver)
 							length = Packet.readGUShort();
@@ -522,42 +393,42 @@ namespace OpenGraal.Common.Levels
 
 						break;
 
-					case Properties.NPCX: // 2 - obsolete
+					case NpcProperties.NPCX: // 2 - obsolete
 					//Packet.ReadGByte1 ();
 						this.OldX = (float)(Packet.readGChar()) / 2.0f;
 						this.PixelX = (int)(this.OldX * 16);
 						break;
 
-					case Properties.NPCY: // 3 - obsolete
+					case NpcProperties.NPCY: // 3 - obsolete
 					//Packet.ReadGByte1 ();
 						this.OldY = (float)(Packet.readGChar()) / 2.0f;
 						this.PixelY = (int)(this.OldY * 16);
 						break;
 
-					case Properties.NPCPOWER: // 4
+					case NpcProperties.NPCPOWER: // 4
 						Packet.readGUChar();
 						break;
 
-					case Properties.NPCRUPEES: // 5
+					case NpcProperties.NPCRUPEES: // 5
 						this.Gralats = (int)Packet.readGUInt();
 						break;
 
-					case Properties.ARROWS: // 6
+					case NpcProperties.ARROWS: // 6
 						this.Arrows = Packet.readGUChar();
 						break;
 
-					case Properties.BOMBS: // 7
+					case NpcProperties.BOMBS: // 7
 						this.Bombs = Packet.readGUChar();
 						break;
 
-					case Properties.GLOVEPOWER: // 8
+					case NpcProperties.GLOVEPOWER: // 8
 						Packet.readGUChar();
 						break;
 
-					case Properties.BOMBPOWER: // 9
+					case NpcProperties.BOMBPOWER: // 9
 						Packet.readGUChar();
 						break;
-					case Properties.SWORDIMG: // 10
+					case NpcProperties.SWORDIMG: // 10
 						{
 							int sp = Packet.readGUChar();
 							if (sp <= 4)
@@ -579,7 +450,7 @@ namespace OpenGraal.Common.Levels
 							//_swordPower = (char)sp;
 						}
 						break;
-					case Properties.SHIELDIMG: // 11
+					case NpcProperties.SHIELDIMG: // 11
 						{
 							int sp = Packet.readGUChar();
 							CString shieldImage = new CString();
@@ -605,145 +476,152 @@ namespace OpenGraal.Common.Levels
 							_shieldImage = shieldImage.ToString();
 						}
 						break;
-					case Properties.GANI: // 12
+					case NpcProperties.GANI: // 12
 						this.Animation = Packet.readChars(Packet.readGUChar()).ToString();
 						break;
 
-					case Properties.VISFLAGS: // 13
+					case NpcProperties.VISFLAGS: // 13
 						this.VisFlags = (sbyte)Packet.readGUChar();
 						break;
 
-					case Properties.BLOCKFLAGS: // 14
+					case NpcProperties.BLOCKFLAGS: // 14
 						this.BlockFlags = (sbyte)Packet.readGUChar();
 						break;
 
-					case Properties.MESSAGE: // 15
+					case NpcProperties.MESSAGE: // 15
 						this.Chat = Packet.readChars(Packet.readGUChar()).ToString();
 						break;
-					case Properties.HURTDXDY: // 16
+					case NpcProperties.HURTDXDY: // 16
 						float hurtX = ((float)(Packet.readGUChar() - 32)) / 32;
 						float hurtY = ((float)(Packet.readGUChar() - 32)) / 32;
 						break;
-					case Properties.NPCID: // 17
+					case NpcProperties.NPCID: // 17
 						this.Id = (int)Packet.readGUInt();
 						break;
 
-					case Properties.SPRITE: // 18
+					case NpcProperties.SPRITE: // 18
 						this.Dir = Packet.readGUChar();
 						break;
 
-					case Properties.COLORS: // 19
+					case NpcProperties.COLORS: // 19
 						for (int i = 0; i < 5; i++)
 							Packet.readGUChar();
 						break;
 
-					case Properties.NICKNAME: // 20
+					case NpcProperties.NICKNAME: // 20
 						this.Nickname = Packet.readChars(Packet.readGUChar()).ToString();
 						break;
 
-					case Properties.HORSEIMG: // 21
+					case NpcProperties.HORSEIMG: // 21
 						Packet.readChars(Packet.readGUChar());
 						break;
 
-					case Properties.HEADIMG: // 22
+					case NpcProperties.HEADIMG: // 22
 						{
 							Int32 len = Packet.readGUChar();
 							this.HeadImage = (len < 100 ? "head" + len + ".png" : Packet.readChars(len - 100).ToString());
 							break;
 						}
 
-					case Properties.SAVE0: // 23
+					case NpcProperties.SAVE0: // 23
 						this.Save[0] = (byte)Packet.readGUChar();
 						break;
 
-					case Properties.SAVE1: // 24
+					case NpcProperties.SAVE1: // 24
 						this.Save[1] = (byte)Packet.readGUChar();
 						break;
 
-					case Properties.SAVE2: // 25
+					case NpcProperties.SAVE2: // 25
 						this.Save[2] = (byte)Packet.readGUChar();
 						break;
 
-					case Properties.SAVE3: // 26
+					case NpcProperties.SAVE3: // 26
 						this.Save[3] = (byte)Packet.readGUChar();
 						break;
 
-					case Properties.SAVE4: // 27
+					case NpcProperties.SAVE4: // 27
 						this.Save[4] = (byte)Packet.readGUChar();
 						break;
 
-					case Properties.SAVE5: // 28
+					case NpcProperties.SAVE5: // 28
 						this.Save[5] = (byte)Packet.readGUChar();
 						break;
 
-					case Properties.SAVE6: // 29
+					case NpcProperties.SAVE6: // 29
 						this.Save[6] = (byte)Packet.readGUChar();
 						break;
 
-					case Properties.SAVE7: // 30
+					case NpcProperties.SAVE7: // 30
 						this.Save[7] = (byte)Packet.readGUChar();
 						break;
 
-					case Properties.SAVE8: // 31
+					case NpcProperties.SAVE8: // 31
 						this.Save[8] = (byte)Packet.readGUChar();
 						break;
 
-					case Properties.SAVE9: // 32
+					case NpcProperties.SAVE9: // 32
 						this.Save[9] = (byte)Packet.readGUChar();
 						break;
 
-					case Properties.ALIGNMENT: // 33
+					case NpcProperties.ALIGNMENT: // 33
 						Packet.readGUChar();
 						break;
 
-					case Properties.IMAGEPART: // 34
+					case NpcProperties.IMAGEPART: // 34
 						this.ImagePart = Packet.readChars(6);
 						break;
 
-					case Properties.BODYIMG: // 35
+					case NpcProperties.BODYIMG: // 35
 						this.BodyImage = Packet.readChars(Packet.readGUChar()).ToString();
 						break;
 
-					case Properties.GMAPLVLX: // 41
+					case NpcProperties.GMAPLVLX: // 41
 						this.GMapX = (byte)Packet.readGUChar();
+						if (this.GMapX != 0)
+						{
+						}
 						break;
 
-					case Properties.GMAPLVLY: // 42
+					case NpcProperties.GMAPLVLY: // 42
 						this.GMapY = (byte)Packet.readGUChar();
+
+						if (this.GMapY != 0)
+						{
+						}
 						break;
-					case Properties.GATTRIB6: // 44
-					case Properties.GATTRIB7: // 45
-					case Properties.GATTRIB8: // 46
-					case Properties.GATTRIB9: // 47
-					case Properties.GATTRIB10: // 53,
-					case Properties.GATTRIB11: // 54,
-					case Properties.GATTRIB12: // 55,
-					case Properties.GATTRIB13: // 56,
-					case Properties.GATTRIB14: // 57,
-					case Properties.GATTRIB15: // 58,
-					case Properties.GATTRIB16: // 59,
-					case Properties.GATTRIB17: // 60,
-					case Properties.GATTRIB18: // 61,
-					case Properties.GATTRIB19: // 62,
-					case Properties.GATTRIB20: // 63,
-					case Properties.GATTRIB21: // 64,
-					case Properties.GATTRIB22: // 65,
-					case Properties.GATTRIB23: // 66,
-					case Properties.GATTRIB24: // 67,
-					case Properties.GATTRIB25: // 68,
-					case Properties.GATTRIB26: // 69,
-					case Properties.GATTRIB27: // 70,
-					case Properties.GATTRIB28: // 71,
-					case Properties.GATTRIB29: // 72,
-					case Properties.GATTRIB30: // 73,
+					case NpcProperties.GATTRIB6: // 44
+					case NpcProperties.GATTRIB7: // 45
+					case NpcProperties.GATTRIB8: // 46
+					case NpcProperties.GATTRIB9: // 47
+					case NpcProperties.GATTRIB10: // 53,
+					case NpcProperties.GATTRIB11: // 54,
+					case NpcProperties.GATTRIB12: // 55,
+					case NpcProperties.GATTRIB13: // 56,
+					case NpcProperties.GATTRIB14: // 57,
+					case NpcProperties.GATTRIB15: // 58,
+					case NpcProperties.GATTRIB16: // 59,
+					case NpcProperties.GATTRIB17: // 60,
+					case NpcProperties.GATTRIB18: // 61,
+					case NpcProperties.GATTRIB19: // 62,
+					case NpcProperties.GATTRIB20: // 63,
+					case NpcProperties.GATTRIB21: // 64,
+					case NpcProperties.GATTRIB22: // 65,
+					case NpcProperties.GATTRIB23: // 66,
+					case NpcProperties.GATTRIB24: // 67,
+					case NpcProperties.GATTRIB25: // 68,
+					case NpcProperties.GATTRIB26: // 69,
+					case NpcProperties.GATTRIB27: // 70,
+					case NpcProperties.GATTRIB28: // 71,
+					case NpcProperties.GATTRIB29: // 72,
+					case NpcProperties.GATTRIB30: // 73,
 						Packet.readChars(Packet.readGUChar());
 						break;
 
-					case Properties.CLASS: // 74
+					case NpcProperties.CLASS: // 74
 						Packet.readChars(Packet.readGShort());
 						break;
 
-					case Properties.PIXELX: // 75
+					case NpcProperties.PIXELX: // 75
 						{
 							int tmp = this.PixelX = Packet.readGUShort();
 						
@@ -754,7 +632,7 @@ namespace OpenGraal.Common.Levels
 							break;
 						}
 
-					case Properties.PIXELY: // 76
+					case NpcProperties.PIXELY: // 76
 						{
 							int tmp = this.PixelY = Packet.readGUShort();
 
@@ -772,7 +650,7 @@ namespace OpenGraal.Common.Levels
 				
 				}
 
-				//Console.WriteLine(": " + this.GetProp((Properties)PropId).ToString());
+				//Console.WriteLine(": " + this.GetProp((NpcProperties)PropId).ToString());
 			}
 
 			// Compile script if script changed.
@@ -804,7 +682,7 @@ namespace OpenGraal.Common.Levels
 			set
 			{
 				SaveData[pos] = value;
-				LevelNpc.SendProp(GraalLevelNPC.Properties.SAVE0 + pos);
+				LevelNpc.SendProp(Common.Interfaces.NpcProperties.SAVE0 + pos);
 			}
 		}
 	}

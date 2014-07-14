@@ -3,8 +3,6 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{BF323091-36E1-4A64-97A2-A62E5F5ABC1B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -35,10 +33,6 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ClearScript, Version=5.3.11.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\opengraal.npcserver-cs\trunk\OpenGraal.NpcServer\bin\Debug\ClearScript.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -48,8 +42,14 @@
     <Reference Include="MySql.Data">
       <HintPath>..\Libraries\mysql.data.dll</HintPath>
     </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=0.85.4.369, Culture=neutral, PublicKeyToken=1b03e6acf1164f73">
+    <Reference Include="MonoGame.Framework">
+      <HintPath>..\..\..\..\..\..\Program Files %28x86%29\MonoGame\v3.0\Assemblies\WindowsGL\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\..\..\opengraal.npcserver-cs\trunk\packages\ICSharpCode.SharpZipLib.dll.0.85.4.369\lib\net20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="ClearScript">
+      <HintPath>..\..\..\opengraal.client-cs\trunk\GameEngine\bin\Debug\ClearScript.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -64,6 +64,7 @@
     <Compile Include="Levels\GraalLevelNPC.cs" />
     <Compile Include="Levels\GraalMap.cs" />
     <Compile Include="Levels\GraalObject.cs" />
+    <Compile Include="Levels\ILevel.cs" />
     <Compile Include="Players\ColorManager.cs" />
     <Compile Include="Players\FlagManager.cs" />
     <Compile Include="Players\GraalPlayer.cs" />

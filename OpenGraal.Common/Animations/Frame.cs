@@ -8,6 +8,9 @@ namespace OpenGraal.Common.Animations
 	public class Frame
 	{
 		public DirFrame[] dirFrames = new DirFrame[4];
+		public string PlaySound = "";
+		public double x = 0.0;
+		public double y = 0.0;
 	}
 
 	public class DirFrame

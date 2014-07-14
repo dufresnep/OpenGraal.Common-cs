@@ -11,13 +11,13 @@ namespace OpenGraal.Common.Scripting
 	{
 		private static V8ScriptEngine _instance;
 		//private string script = "";
-
 		public static V8ScriptEngine GetInstance()
 		{
 			if (_instance == null)
 			{
 				_instance = new V8ScriptEngine();
 				_instance.AddHostType("Console", typeof(Console));
+				_instance.AddHostType("Animation", typeof(OpenGraal.Common.Animations.Animation));
 			}
 
 			return _instance;
@@ -56,6 +56,7 @@ namespace OpenGraal.Common.Scripting
 			var del = (Delegate)host.func<object>(argsLength, ((dynamic)script)[name]);
 			return del.DynamicInvoke(args);
 		}
+
 		public static dynamic hasMethod = V8Instance.GetInstance().Evaluate(@"
 			(function (obj, name, paramCount) {
 				return (typeof obj[name] === 'function') && (obj[name].length === paramCount);

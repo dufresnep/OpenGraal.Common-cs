@@ -6,10 +6,12 @@ using OpenGraal;
 using OpenGraal.Core;
 using OpenGraal.Common;
 using OpenGraal.Common.Players;
-
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections;
 namespace OpenGraal.Common.Levels
 {
-	public class GraalMap
+	public class GraalMap : Interfaces.ILevel
 	{
 		#region Member Variables
 
@@ -20,6 +22,7 @@ namespace OpenGraal.Common.Levels
 		public bool AutoMapping, LoadFullMap;
 		public string MapName, MapImage, MiniMapImage;
 		private GraalLevel[] MapLevels = new GraalLevel[] { };
+		
 		private string _levelPath = "";
 
 		#endregion
@@ -29,7 +32,7 @@ namespace OpenGraal.Common.Levels
 		/// <summary>
 		/// Constructor
 		/// </summary>
-		public GraalMap(String MapName)
+		public GraalMap(String MapName) : base(MapName)
 		{
 			this.MapName = MapName;
 		}
@@ -38,6 +41,7 @@ namespace OpenGraal.Common.Levels
 		/// Constructor (load by file)
 		/// </summary>
 		public GraalMap(String MapName, String FilePath)
+			: base(MapName)
 		{
 			this.MapName = MapName;
 			this.ParseFile(FilePath);
@@ -46,6 +50,23 @@ namespace OpenGraal.Common.Levels
 		#endregion
 
 		#region Public functions
+
+		public GraalLevelNPC isOnNPC(int x, int y)
+		{
+			foreach (KeyValuePair<int, GraalLevelNPC> v in NpcList)
+			{
+				GraalLevelNPC npc = v.Value;
+				if (npc.Image != String.Empty)
+				{
+					if ((npc.VisFlags & 1) != 0) // && (npc.BlockFlags & 1) == 0
+					{
+						if (x >= npc.PixelX && x <= npc.PixelX + npc.Width && y >= npc.PixelY && y < npc.PixelY + npc.Height)
+							return npc;
+					}
+				}
+			}
+			return null;
+		}
 
 		/// <summary>
 		/// Get Level from Map X / Map Y
@@ -94,9 +115,18 @@ namespace OpenGraal.Common.Levels
 			return exist;
 		}
 
-		/// <summary>
-		/// Parse GMap by File
-		/// </summary>
+		public override void ClearAll()
+		{
+
+			this.MapLevels = null;
+		}
+
+		public override bool Load(string file)
+		{
+			this.ParseFile(file);
+			return true;
+		}
+
 		public void ParseFile(String File)
 		{
 			using (TextReader reader = new StreamReader(File))
@@ -151,7 +181,7 @@ namespace OpenGraal.Common.Levels
 						+ "if (created)\n{\n"
 						+ "\tloadmap " + this.MapName + ";\n"
 						+ "}\n";
-						this.MapLevels[pos].NpcList.Add(this.MapLevels[pos].NpcList.Count + 1, loadMapNpc);
+						this.MapLevels[pos].NpcList.GetOrAdd(this.MapLevels[pos].NpcList.Count + 1, loadMapNpc);
 						#endregion
 
 						if (TemplateFileName.Length != 0)
