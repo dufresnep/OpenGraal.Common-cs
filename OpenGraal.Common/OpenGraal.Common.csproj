@@ -33,9 +33,6 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ClassLibrary">
-      <HintPath>..\..\OpenGraal.Core-cs\bin\Debug\ClassLibrary.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -83,6 +80,20 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\clearscript\ClearScript\ClearScript.csproj">
+      <Project>{d2382d2c-6576-4d96-b6cd-057c4f6bed96}</Project>
+      <Name>ClearScript</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\OpenGraal.Common.Interfaces-cs\OpenGraal.Common.Interfaces\OpenGraal.Common.Interfaces.csproj">
+      <Project>{f35cb43b-dca8-4283-900a-2923c7c67483}</Project>
+      <Name>OpenGraal.Common.Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\OpenGraal.Core-cs\CoreVS2013.csproj">
+      <Project>{265ad0ca-2b19-42ab-9949-b04a135969f5}</Project>
+      <Name>CoreVS2013</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -91,10 +102,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup>
-    <ProjectReference Include="..\..\OpenGraal.Common.Interfaces-cs\OpenGraal.Common.Interfaces\OpenGraal.Common.Interfaces.csproj">
-      <Project>{f35cb43b-dca8-4283-900a-2923c7c67483}</Project>
-      <Name>OpenGraal.Common.Interfaces</Name>
-    </ProjectReference>
-  </ItemGroup>
 </Project>
