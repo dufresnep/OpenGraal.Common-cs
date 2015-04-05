@@ -48,9 +48,6 @@
     <Reference Include="ICSharpCode.SharpZipLib">
       <HintPath>..\..\SharpZipLib\bin\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
-    <Reference Include="ClearScript">
-      <HintPath>..\..\..\opengraal.client-cs\trunk\GameEngine\bin\Debug\ClearScript.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Animations\Animation.cs" />
@@ -95,14 +92,9 @@
   </Target>
   -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\opengraal.common.interfaces-cs\trunk\OpenGraal.Common.Interfaces\OpenGraal.Common.Interfaces.csproj">
-      <Project>{F35CB43B-DCA8-4283-900A-2923C7C67483}</Project>
+    <ProjectReference Include="..\..\OpenGraal.Common.Interfaces-cs\OpenGraal.Common.Interfaces\OpenGraal.Common.Interfaces.csproj">
+      <Project>{f35cb43b-dca8-4283-900a-2923c7c67483}</Project>
       <Name>OpenGraal.Common.Interfaces</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\OpenGraal.Core-cs\OpenGraal.Core\OpenGraal.Core.csproj">
-      <Project>{CC4AF8B5-BECF-4562-A0E5-94FBE0FBAB8F}</Project>
-      <Name>OpenGraal.Core</Name>
-    </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
 </Project>

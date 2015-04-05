@@ -8,9 +8,9 @@ using OpenGraal.Common;
 using OpenGraal.Common.Levels;
 using OpenGraal.Common.Scripting;
 using OpenGraal.Common.Animations;
+using OpenGraal.Common.Interfaces;
 
-namespace OpenGraal.Common.Players
-{
+namespace OpenGraal.Common.Players{
 	public class GraalPlayer: IGaniObj, IPlayer
 	{
 		#region Enumerators
